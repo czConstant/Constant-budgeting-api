@@ -1,0 +1,4 @@
+
+
+class BudgetingNotification:
+    pass
