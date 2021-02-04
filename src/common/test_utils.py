@@ -3,7 +3,7 @@ from unittest.mock import MagicMock
 from django.conf import settings
 from rest_framework.test import APIClient
 
-from exchange_auth.authentication import ReCaptchaPermission
+from budgeting_auth.authentication import ReCaptchaPermission
 from integration_3rdparty.const import ConstantManagement
 
 

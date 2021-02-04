@@ -1,7 +1,9 @@
 from django.contrib.auth.models import User
 from django.db import models
+from django.utils import timezone
 from django.utils.functional import cached_property
 
+from budgeting.constants import DIRECTION
 from constant_core.models import User as CoreUser
 
 
@@ -71,3 +73,29 @@ class SystemConstUser(ConstUser):
     @property
     def full_name(self) -> str:
         return '%s %s'.format(self.c_first_name, self.c_last_name)
+
+
+class TimestampedModel(models.Model):
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        abstract = True
+
+
+class Category(TimestampedModel):
+    name = models.CharField(max_length=255)
+    description = models.CharField(max_length=255)
+    code = models.CharField(max_length=50)
+    order = models.IntegerField(default=0)
+    deleted_at = models.DateTimeField(null=True)
+
+
+class Transaction(TimestampedModel):
+    user_id = models.IntegerField()
+    category = models.ForeignKey(Category,
+                                 related_name='category_transactions',
+                                 on_delete=models.SET_NULL, null=True)
+    direction = models.CharField(max_length=50, choices=DIRECTION)
+    amount = models.DecimalField(max_digits=18, decimal_places=2)
+    note = models.CharField(max_length=255)

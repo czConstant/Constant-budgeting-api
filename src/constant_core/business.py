@@ -1,19 +1,13 @@
 import json
 import logging
-from datetime import timedelta
 from decimal import Decimal
 
-from django.conf import settings
 from django.core.serializers.json import DjangoJSONEncoder
-from django.db import transaction
-from django.db.models import Q
 
-from common.business import get_now, generate_random_code_2
+from common.business import get_now
 from constant_core.exceptions import NotEnoughBalanceException
-from constant_core.models import User, Reserves, UserBank, AdminLogActions, PlaidAccounts, UserExtraInfo
-from constant_core.serializers import BankSerializer, SimpleUserSerializer
-from integration_3rdparty.const_core import ConstantCoreManagement, TransferBalance, BalanceHold, BalanceRelease, \
-    TransferBalanceFromHold, TransferBalanceToHold
+from constant_core.models import User, Reserves, AdminLogActions, UserExtraInfo
+from integration_3rdparty.const_core import ConstantCoreManagement, TransferBalance, BalanceHold, BalanceRelease
 
 
 class ConstantCoreBusiness(object):

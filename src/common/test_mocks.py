@@ -5,10 +5,9 @@ from constant_core.business import ConstantCoreBusiness
 from constant_core.models import User, Reserves, PlaidAccounts, AdminLogActions, AdminPermissions
 from constant_core.queries import BackendQuery
 from budgeting.business.notification import BudgetingNotification
-from exchange_pubsub.google_pubsub import PubSub
+from budgeting_pubsub.google_pubsub import PubSub
 
 from integration_3rdparty.const_core import ConstantCoreManagement
-from integration_3rdparty.const_hook import ConstantHookManagement
 
 
 class CoreMock(object):
