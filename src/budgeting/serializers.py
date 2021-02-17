@@ -24,4 +24,4 @@ class TransactionSerializer(serializers.ModelSerializer):
 class TransactionByDaySerializer(serializers.ModelSerializer):
     class Meta:
         model = TransactionByDay
-        fields = '__all__'
+        fields = ('income_amount', 'expense_amount', 'created_at')
