@@ -32,6 +32,7 @@ class TransactionFilter(filters.FilterSet):
     )
     from_date = filters.DateFilter(field_name='created_at', lookup_expr='gte')
     to_date = filters.DateFilter(field_name='created_at', lookup_expr='lte')
+    wallet = filters.NumberFilter(field_name='wallet_id')
 
 
 class TransactionViewSet(ModelViewSet):
@@ -57,7 +58,9 @@ class TransactionViewSet(ModelViewSet):
     def by_month(self, request):
         # Format: 2021-02
         month = request.query_params.get('month')
-        qs = TransactionQueries.get_transaction_by_month(request.user.user_id, month)
+        wallet_id = request.query_params.get('wallet')
+
+        qs = TransactionQueries.get_transaction_by_month(request.user.user_id, month, wallet_id=wallet_id)
         data = TransactionByDaySerializer(qs, many=True).data
 
         return Response(data)

@@ -6,7 +6,7 @@ from budgeting.models import Category, Transaction, TransactionByDay
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
-        fields = ('id', 'name', 'description')
+        fields = ('id', 'name', 'code', 'direction', 'description')
 
 
 class TransactionSerializer(serializers.ModelSerializer):

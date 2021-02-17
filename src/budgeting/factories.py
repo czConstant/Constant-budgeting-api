@@ -21,3 +21,11 @@ class TransactionFactory(factory.django.DjangoModelFactory):
     user_id = factory.Sequence(lambda n: n)
     direction = DIRECTION.expense
     amount = Decimal(10)
+
+
+class WalletFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = 'budgeting.Wallet'
+
+    user_id = factory.Sequence(lambda n: n)
+    name = 'Wallet'

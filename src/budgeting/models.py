@@ -87,8 +87,15 @@ class Category(TimestampedModel):
     name = models.CharField(max_length=255)
     description = models.CharField(max_length=255)
     code = models.CharField(max_length=50)
+    direction = models.CharField(max_length=50, choices=DIRECTION, default=DIRECTION.income)
     order = models.IntegerField(default=0)
     deleted_at = models.DateTimeField(null=True)
+
+
+class Wallet(TimestampedModel):
+    user_id = models.IntegerField()
+    name = models.CharField(max_length=255, null=True, blank=True)
+    plaid_id = models.IntegerField(null=True)
 
 
 class Transaction(TimestampedModel):
@@ -99,6 +106,9 @@ class Transaction(TimestampedModel):
     direction = models.CharField(max_length=50, choices=DIRECTION)
     amount = models.DecimalField(max_digits=18, decimal_places=2)
     note = models.CharField(max_length=255, null=True, blank=True)
+    wallet = models.ForeignKey(Wallet,
+                               related_name='wallet_transactions',
+                               on_delete=models.SET_NULL, null=True)
 
 
 class TransactionByDay(models.Model):
