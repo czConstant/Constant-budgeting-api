@@ -98,4 +98,13 @@ class Transaction(TimestampedModel):
                                  on_delete=models.SET_NULL, null=True)
     direction = models.CharField(max_length=50, choices=DIRECTION)
     amount = models.DecimalField(max_digits=18, decimal_places=2)
-    note = models.CharField(max_length=255)
+    note = models.CharField(max_length=255, null=True, blank=True)
+
+
+class TransactionByDay(models.Model):
+    class Meta:
+        managed = False
+    user_id = models.IntegerField()
+    income_amount = models.DecimalField(max_digits=18, decimal_places=2)
+    expense_amount = models.DecimalField(max_digits=18, decimal_places=2)
+    created_at = models.DateField()
