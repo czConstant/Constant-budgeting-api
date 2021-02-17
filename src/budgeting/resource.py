@@ -13,7 +13,6 @@ class CategoryViewSet(ReadOnlyModelViewSet):
     permission_classes = (AllowAny, )
     serializer_class = CategorySerializer
     queryset = Category.objects.filter(deleted_at__isnull=True).order_by('order')
-    pagination_class = StandardPagination
 
 
 class TransactionViewSet(ModelViewSet):

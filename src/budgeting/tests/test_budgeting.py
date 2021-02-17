@@ -15,7 +15,7 @@ class CategoryTests(APITestCase):
     def test_list(self):
         response = self.client.get(self.url, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.json()['results']), 10)
+        self.assertEqual(len(response.json()), 10)
 
 
 class TransactionTests(APITestCase):
