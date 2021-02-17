@@ -12,17 +12,19 @@ class AuthenticationUtils(object):
         self.client = client
         self.username = username
 
-    def user_login(self, username: str = None):
+    def user_login(self, username: str = None, user_id: int = None):
         username = username if username else self.username
+        user_id = 1 if not user_id else user_id
         ConstantManagement.auth_check = MagicMock(return_value={
             'Result': {
-                'ID': 1,
+                'ID': user_id,
                 'UserName': username,
                 'FullName': username,
                 'Email': username,
             }
         })
         self.client.credentials(HTTP_AUTHORIZATION='Bearer ' + username)
+        return user_id
 
     def system_login(self, username: str = None):
         username = username if username else self.username
