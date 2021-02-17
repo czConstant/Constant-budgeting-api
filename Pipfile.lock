@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "b62fe131d4caa3820f1cac96385c9dc1f97effd1d4c514ca2ce4fc729bb02fd1"
+            "sha256": "c8ead8b72c75362c62276aea5482e30c93587f5c2a7ac286120e8005dfb527bd"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -224,10 +224,10 @@
         },
         "faker": {
             "hashes": [
-                "sha256:1a40c9696830342e67d30057753323478b848e89334e97e0a64b442b18ae7ece",
-                "sha256:dd98418eceb374c475e85bd49ae826a9b304dabcd794640f35a1d185f4767dd9"
+                "sha256:190f0d3ce037866b5d230f0b9fd0f513f07c25dc326dcad6ee019849c68d441c",
+                "sha256:db7adc3b4755005fc960cf96fb4ed46b54b6eb21413741ab3f31a9595f379905"
             ],
-            "version": "==5.7.0"
+            "version": "==6.0.0"
         },
         "flake8": {
             "hashes": [
@@ -248,10 +248,10 @@
         },
         "google-auth": {
             "hashes": [
-                "sha256:0b0e026b412a0ad096e753907559e4bdb180d9ba9f68dd9036164db4fdc4ad2e",
-                "sha256:ce752cc51c31f479dbf9928435ef4b07514b20261b021c7383bee4bda646acb8"
+                "sha256:008e23ed080674f69f9d2d7d80db4c2591b9bb307d136cea7b3bc129771d211d",
+                "sha256:514e39f4190ca972200ba33876da5a8857c5665f2b4ccc36c8b8ee21228aae80"
             ],
-            "version": "==1.24.0"
+            "version": "==1.25.0"
         },
         "google-cloud-pubsub": {
             "hashes": [
@@ -427,10 +427,10 @@
         },
         "packaging": {
             "hashes": [
-                "sha256:24e0da08660a87484d1602c30bb4902d74816b6985b93de36926f5bc95741858",
-                "sha256:78598185a7008a470d64526a8059de9aaa449238f280fc9eb6b13ba6c4109093"
+                "sha256:5b327ac1320dc863dca72f4514ecc086f31186744b84a230374cc1fd776feae5",
+                "sha256:67714da7f7bc052e064859c05c595155bd1ee9f69f76557e21f051443c20947a"
             ],
-            "version": "==20.8"
+            "version": "==20.9"
         },
         "pillow": {
             "hashes": [
@@ -467,6 +467,13 @@
             ],
             "index": "pypi",
             "version": "==5.3.0"
+        },
+        "plaid-python": {
+            "hashes": [
+                "sha256:bd599b384f94d8883344925f0ef223e1ab50f218872434aa40ba8c645937699c"
+            ],
+            "index": "pypi",
+            "version": "==7.2.0"
         },
         "pluggy": {
             "hashes": [

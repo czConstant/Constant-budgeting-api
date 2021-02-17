@@ -310,6 +310,12 @@ CONST_CORE_API = {
     'URL': 'http://constant-core-service:9090'
 }
 
+PLAID_API = {
+    "URL": "https://sandbox.plaid.com",
+    "CLIENT_ID": "5efd315f4ba6640012dc8019",
+    "SECRET": "456cab4f77591fe5e12fa39532ff79"
+}
+
 FRONT_END_URL = 'https://staging.constant.money'
 
 SYSTEM_ACCOUNT = 0
