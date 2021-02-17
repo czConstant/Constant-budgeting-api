@@ -220,7 +220,7 @@ LOGGING = {
         'file': {
             'level': 'INFO',
             'class': 'logging.handlers.RotatingFileHandler',
-            'filename': '/elk/filebeat/budgeting-api.log',
+            'filename': '/elk/filebeat/exchange-api.log',
             'maxBytes': 15728640,  # 1024 * 1024 * 15B = 15MB
             'backupCount': 10,
             'formatter': 'simple',

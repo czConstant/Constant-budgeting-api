@@ -63,7 +63,7 @@ def custom_exception_handler(exc, context):
 class RequestLogMiddleware(MiddlewareMixin):
     """Request Logging Middleware."""
 
-    SERVICE_URL = '/exchange-api/'
+    SERVICE_URL = '/budgeting-api/'
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -80,8 +80,8 @@ class RequestLogMiddleware(MiddlewareMixin):
             'path': request.get_full_path(),
             'latency': time.time() - request.start_time,
             'status': response.status_code if response else 0,
-            'service': 'exchange-api',
-            'app_name': 'API_EXCHANGE',
+            'service': 'budgeting-api',
+            'app_name': 'API_BUGETING',
             'user_agent': request.META.get('HTTP_USER_AGENT'),
             'platform': request.META.get('HTTP_PLATFORM'),
             'os': request.META.get('HTTP_OS'),
