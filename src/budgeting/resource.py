@@ -15,16 +15,32 @@ from budgeting.serializers import CategorySerializer, TransactionSerializer, Tra
 from common.http import StandardPagination
 
 
+class CategoryFilter(filters.FilterSet):
+    class Meta:
+        model = Category
+        fields = ('direction', )
+
+    direction = filters.MultipleChoiceFilter(
+        choices=DIRECTION
+    )
+
+
 class CategoryViewSet(ReadOnlyModelViewSet):
     permission_classes = (AllowAny, )
+    filter_backends = (DjangoFilterBackend, OrderingFilter)
+    filterset_class = CategoryFilter
     serializer_class = CategorySerializer
     queryset = Category.objects.filter(deleted_at__isnull=True).order_by('order')
 
 
 class WalletViewSet(ReadOnlyModelViewSet):
-    permission_classes = (AllowAny,)
+    permission_classes = (IsAuthenticated,)
     serializer_class = WalletSerializer
-    queryset = Wallet.objects.filter(deleted_at__isnull=True)
+    queryset = Wallet.objects.none()
+
+    def get_queryset(self):
+        return Wallet.objects.filter(user_id=self.request.user.user_id,
+                                     deleted_at__isnull=True).order_by('-created_at')
 
 
 class TransactionFilter(filters.FilterSet):

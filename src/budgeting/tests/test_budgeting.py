@@ -23,7 +23,9 @@ class CategoryTests(APITestCase):
 
 class WalletTests(APITestCase):
     def setUp(self):
-        WalletFactory.create_batch(10)
+        self.auth_utils = AuthenticationUtils(self.client)
+        self.user_id = self.auth_utils.user_login()
+        WalletFactory.create_batch(10, user_id=self.user_id)
         self.url = reverse('budget:wallet-list')
 
     def test_list(self):
