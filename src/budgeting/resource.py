@@ -8,9 +8,10 @@ from rest_framework.response import Response
 from rest_framework.viewsets import ReadOnlyModelViewSet, ModelViewSet
 
 from budgeting.constants import DIRECTION
-from budgeting.models import Category, Transaction
+from budgeting.models import Category, Transaction, Wallet
 from budgeting.queries import TransactionQueries
-from budgeting.serializers import CategorySerializer, TransactionSerializer, TransactionByDaySerializer
+from budgeting.serializers import CategorySerializer, TransactionSerializer, TransactionByDaySerializer, \
+    WalletSerializer
 from common.http import StandardPagination
 
 
@@ -18,6 +19,12 @@ class CategoryViewSet(ReadOnlyModelViewSet):
     permission_classes = (AllowAny, )
     serializer_class = CategorySerializer
     queryset = Category.objects.filter(deleted_at__isnull=True).order_by('order')
+
+
+class WalletViewSet(ReadOnlyModelViewSet):
+    permission_classes = (AllowAny,)
+    serializer_class = WalletSerializer
+    queryset = Wallet.objects.filter(deleted_at__isnull=True)
 
 
 class TransactionFilter(filters.FilterSet):

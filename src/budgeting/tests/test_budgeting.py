@@ -7,7 +7,6 @@ from rest_framework.test import APITestCase
 
 from budgeting.constants import DIRECTION
 from budgeting.factories import CategoryFactory, TransactionFactory, WalletFactory
-from budgeting.resource import TransactionViewSet
 from common.test_utils import AuthenticationUtils
 
 
@@ -15,6 +14,17 @@ class CategoryTests(APITestCase):
     def setUp(self):
         CategoryFactory.create_batch(10)
         self.url = reverse('budget:category-list')
+
+    def test_list(self):
+        response = self.client.get(self.url, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.json()), 10)
+
+
+class WalletTests(APITestCase):
+    def setUp(self):
+        WalletFactory.create_batch(10)
+        self.url = reverse('budget:wallet-list')
 
     def test_list(self):
         response = self.client.get(self.url, format='json')

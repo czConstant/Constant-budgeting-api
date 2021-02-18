@@ -96,6 +96,7 @@ class Wallet(TimestampedModel):
     user_id = models.IntegerField()
     name = models.CharField(max_length=255, null=True, blank=True)
     plaid_id = models.IntegerField(null=True)
+    deleted_at = models.DateTimeField(null=True)
 
 
 class Transaction(TimestampedModel):
@@ -109,6 +110,7 @@ class Transaction(TimestampedModel):
     wallet = models.ForeignKey(Wallet,
                                related_name='wallet_transactions',
                                on_delete=models.SET_NULL, null=True)
+    transaction_at = models.DateTimeField(null=True, default=timezone.now)
 
 
 class TransactionByDay(models.Model):
