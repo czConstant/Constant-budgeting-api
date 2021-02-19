@@ -1,6 +1,8 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 
+from budgeting_job.views import ImportPlaidTransactionView
+
 router = DefaultRouter()
 
 patterns = ([

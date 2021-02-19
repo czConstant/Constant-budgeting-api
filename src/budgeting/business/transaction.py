@@ -35,41 +35,39 @@ class TransactionBusiness:
             try:
                 amount = Decimal(transaction['amount'])
                 direction = DIRECTION.income if amount < 0 else DIRECTION.expense
-                location = transaction.get('location')
-                location = {} if not location else location
-                note = '{name}, {address}, {city}, {region} {postal_code} {country}'.format(
-                    name=transaction.get('name'),
-                    address=location.get('address'),
-                    city=location.get('city'),
-                    region=location.get('region'),
-                    postal_code=location.get('postal_code'),
-                    country=location.get('country'),
-                )
+                amount = amount * Decimal(-1) if amount < 0 else amount
+                note = '{}'.format(transaction.get('name'))
                 picked_cat = None
                 cats = transaction.get('category', [])
                 cats = cats if cats else []
                 if cats:
                     cats.sort(key=lambda item: len(item), reverse=True)
                     picked_cat_txt = cats[0]
-                    if picked_cat_txt not in cache_category_mapping:
+                    if picked_cat_txt not in cache_category_mapping[direction]:
                         obj = CategoryMapping.objects.filter(name=picked_cat_txt).first()
                         if obj:
-                            cache_category_mapping[picked_cat_txt] = obj
-                    if picked_cat_txt in cache_category_mapping:
-                        picked_cat = cache_category_mapping[picked_cat_txt]
+                            cache_category_mapping[direction][picked_cat_txt] = obj
+                    if picked_cat_txt in cache_category_mapping[direction]:
+                        picked_cat = cache_category_mapping[direction][picked_cat_txt]
                     else:
-                        picked_cat = cache_category_mapping[default_category]
+                        picked_cat = cache_category_mapping[direction][default_category]
 
-                Transaction.objects.create(
+                obj, created = Transaction.objects.get_or_create(
                     user_id=user_id,
                     amount=amount,
+                    currency=transaction['iso_currency_code'],
                     direction=direction,
-                    note=note,
+                    external_id=transaction['transaction_id'],
                     wallet=wallet,
-                    transaction_at=location['authorized_date'],
-                    detail=json.dumps(transaction, cls=DjangoJSONEncoder),
-                    category=picked_cat,
-                    category_text=','.join(cats)
+                    defaults={
+                        'note': note,
+                        'transaction_at': transaction['date'],
+                        'detail': json.dumps(transaction, cls=DjangoJSONEncoder),
+                        'category': picked_cat,
+                        'category_text': ','.join(cats),
+                    }
                 )
+                if not created:
+                    pass
             except Exception as ex:
                 logging.exception(ex)

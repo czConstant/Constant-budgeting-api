@@ -10,3 +10,14 @@ class ImportPlaidTransactionView(APIView):
 
     def post(self, request, format=None):
         return Response()
+
+#
+# from budgeting.business.transaction import TransactionBusiness
+# from budgeting.models import Wallet
+# from datetime import datetime
+#
+# def do_import():
+#     from_dt = datetime(2021, 1, 1)
+#     to_dt = datetime(2021, 2, 1)
+#     wallet = Wallet.objects.filter(user_id=800).first()
+#     TransactionBusiness.import_transaction_from_plaid(800, wallet, from_dt, to_dt)

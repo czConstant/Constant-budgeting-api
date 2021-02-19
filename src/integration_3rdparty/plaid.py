@@ -18,9 +18,7 @@ class PlaidManagement(object):
                                                )
             transactions.extend(response['transactions'])
 
-        for tx in transactions:
-            for cat in tx['category']:
-                print(cat)
+        return transactions
 
     @staticmethod
     def get_categories():
@@ -30,3 +28,4 @@ class PlaidManagement(object):
             cats.extend(cat['hierarchy'])
 
         print(set(cats))
+        return cats

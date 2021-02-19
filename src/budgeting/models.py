@@ -119,11 +119,13 @@ class Transaction(TimestampedModel):
     category_text = models.CharField(max_length=255, null=True, blank=True)
     direction = models.CharField(max_length=50, choices=DIRECTION)
     amount = models.DecimalField(max_digits=18, decimal_places=2)
+    currency = models.CharField(max_length=10, default='USD')
     note = models.CharField(max_length=255, null=True, blank=True)
     wallet = models.ForeignKey(Wallet,
                                related_name='wallet_transactions',
                                on_delete=models.SET_NULL, null=True)
     transaction_at = models.DateTimeField(null=True, default=timezone.now)
+    external_id = models.CharField(max_length=255, null=True, blank=True)
     detail = models.TextField(null=True, blank=True)
 
 
