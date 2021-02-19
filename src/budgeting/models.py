@@ -85,6 +85,7 @@ class TimestampedModel(models.Model):
 
 class CategoryGroup(TimestampedModel):
     name = models.CharField(max_length=255)
+    code = models.CharField(max_length=50, blank=True, default='')
     order = models.IntegerField(default=0)
     deleted_at = models.DateTimeField(null=True)
 
