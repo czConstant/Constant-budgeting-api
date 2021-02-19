@@ -17,11 +17,12 @@ class CategoryGroupSerializer(serializers.ModelSerializer):
     categories = serializers.SerializerMethodField()
 
     def get_categories(self, instance):
-        qs = instance.group_categories.all()
+        qs = instance.group_categories.filter(deleted_at__isnull=False)
         if 'request' in self.context:
             direction = self.context['request'].query_params.get('direction')
             if direction:
                 qs = qs.filter(direction=direction)
+        qs = qs.order('order')
         serializer = CategorySerializer(qs, many=True, context=self.context)
         return serializer.data
 

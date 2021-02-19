@@ -68,6 +68,8 @@ class TransactionBusiness:
                     }
                 )
                 if not created:
-                    pass
+                    if obj.category_id and obj.category_id != picked_cat.id:
+                        obj.category = picked_cat
+                        obj.save()
             except Exception as ex:
                 logging.exception(ex)
