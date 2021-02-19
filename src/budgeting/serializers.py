@@ -18,7 +18,8 @@ class WalletSerializer(serializers.ModelSerializer):
 class TransactionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Transaction
-        fields = '__all__'
+        fields = ('id', 'transaction_at', 'category',
+                  'direction', 'amount', 'wallet', 'note')
         read_only_fields = ('user_id', )
         extra_kwargs = {
             'user_id': {
@@ -30,4 +31,4 @@ class TransactionSerializer(serializers.ModelSerializer):
 class TransactionByDaySerializer(serializers.ModelSerializer):
     class Meta:
         model = TransactionByDay
-        fields = ('income_amount', 'expense_amount', 'created_at')
+        fields = ('income_amount', 'expense_amount', 'transaction_at')

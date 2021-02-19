@@ -6,7 +6,7 @@ from django.core.serializers.json import DjangoJSONEncoder
 
 from common.business import get_now
 from constant_core.exceptions import NotEnoughBalanceException
-from constant_core.models import User, Reserves, AdminLogActions, UserExtraInfo
+from constant_core.models import User, Reserves, AdminLogActions, UserExtraInfo, PlaidAccounts
 from integration_3rdparty.const_core import ConstantCoreManagement, TransferBalance, BalanceHold, BalanceRelease
 
 
@@ -72,6 +72,10 @@ class ConstantCoreBusiness(object):
     @staticmethod
     def get_user_by_email(email: str):
         return User.objects.filter(email=email).first()
+
+    @staticmethod
+    def get_plaid_account(plaid_id):
+        return PlaidAccounts.objects.filter(id=plaid_id).first()
 
     @staticmethod
     def create_admin_log_action(request):

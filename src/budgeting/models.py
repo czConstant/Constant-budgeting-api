@@ -83,6 +83,12 @@ class TimestampedModel(models.Model):
         abstract = True
 
 
+class CategoryGroup(TimestampedModel):
+    name = models.CharField(max_length=255)
+    order = models.IntegerField(default=0)
+    deleted_at = models.DateTimeField(null=True)
+
+
 class Category(TimestampedModel):
     name = models.CharField(max_length=255)
     description = models.CharField(max_length=255)
@@ -90,6 +96,12 @@ class Category(TimestampedModel):
     direction = models.CharField(max_length=50, choices=DIRECTION, default=DIRECTION.income)
     order = models.IntegerField(default=0)
     deleted_at = models.DateTimeField(null=True)
+    group = models.ForeignKey(CategoryGroup, related_name='category_groups', null=True, on_delete=models.SET_NULL)
+
+
+class CategoryMapping(TimestampedModel):
+    name = models.CharField(max_length=255)
+    category = models.ForeignKey(CategoryGroup, related_name='category_mappings', on_delete=models.CASCADE)
 
 
 class Wallet(TimestampedModel):
@@ -104,6 +116,7 @@ class Transaction(TimestampedModel):
     category = models.ForeignKey(Category,
                                  related_name='category_transactions',
                                  on_delete=models.SET_NULL, null=True)
+    category_text = models.CharField(max_length=255, null=True, blank=True)
     direction = models.CharField(max_length=50, choices=DIRECTION)
     amount = models.DecimalField(max_digits=18, decimal_places=2)
     note = models.CharField(max_length=255, null=True, blank=True)
@@ -111,6 +124,7 @@ class Transaction(TimestampedModel):
                                related_name='wallet_transactions',
                                on_delete=models.SET_NULL, null=True)
     transaction_at = models.DateTimeField(null=True, default=timezone.now)
+    detail = models.TextField(null=True, blank=True)
 
 
 class TransactionByDay(models.Model):
@@ -119,4 +133,4 @@ class TransactionByDay(models.Model):
     user_id = models.IntegerField()
     income_amount = models.DecimalField(max_digits=18, decimal_places=2)
     expense_amount = models.DecimalField(max_digits=18, decimal_places=2)
-    created_at = models.DateField()
+    transaction_at = models.DateField()

@@ -53,8 +53,8 @@ class TransactionFilter(filters.FilterSet):
     direction = filters.MultipleChoiceFilter(
         choices=DIRECTION
     )
-    from_date = filters.DateFilter(field_name='created_at', lookup_expr='gte')
-    to_date = filters.DateFilter(field_name='created_at', lookup_expr='lte')
+    from_date = filters.DateFilter(field_name='transaction_at', lookup_expr='gte')
+    to_date = filters.DateFilter(field_name='transaction_at', lookup_expr='lte')
     wallet = filters.NumberFilter(field_name='wallet_id')
 
 

@@ -102,7 +102,7 @@ class TransactionFilterTests(APITestCase):
         self.assertEqual(len(response.json()['results']), 5)
 
     def test_summary_filter(self):
-        TransactionFactory.create_batch(5, user_id=1, created_at=datetime(2021, 2, 20))
+        TransactionFactory.create_batch(5, user_id=1, transaction_at=datetime(2021, 2, 20))
 
         url = reverse('budget:transaction-by-month')
         response = self.client.get(url + '?month=2021-02', format='json')
@@ -111,8 +111,8 @@ class TransactionFilterTests(APITestCase):
 
     def test_summary_filter_wallet(self):
         wallet = WalletFactory(user_id=self.user_id)
-        TransactionFactory.create_batch(5, user_id=1, created_at=datetime(2021, 2, 20), wallet=wallet)
-        TransactionFactory.create_batch(5, user_id=1, created_at=datetime(2021, 2, 20))
+        TransactionFactory.create_batch(5, user_id=1, transaction_at=datetime(2021, 2, 20), wallet=wallet)
+        TransactionFactory.create_batch(5, user_id=1, transaction_at=datetime(2021, 2, 20))
         url = reverse('budget:transaction-by-month')
         response = self.client.get(url + '?month=2021-02' + '&wallet=' + str(wallet.id), format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)

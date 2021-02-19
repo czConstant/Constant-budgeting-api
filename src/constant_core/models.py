@@ -194,6 +194,7 @@ class PlaidAccounts(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     deleted_at = models.DateTimeField(null=True)
+    access_token = models.CharField(max_length=255)
     institution_name = models.CharField(max_length=255)
     is_default = models.BooleanField()
 

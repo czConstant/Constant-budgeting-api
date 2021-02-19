@@ -1,12 +1,6 @@
-import logging
-from decimal import Decimal
-
 import requests
 from django.conf import settings
 from rest_framework.exceptions import AuthenticationFailed
-
-from exchange.exceptions import InsufficientBankAccount, NotEnoughBalanceException, InvalidBankAccountName, \
-    NeedKycException, SuspendWithdrawal, ViolateWithdrawalPolicyException
 
 
 class Client(object):
@@ -48,6 +42,7 @@ class Client(object):
             raise AuthenticationFailed
 
         raise Exception('API issue HTTP Status {} Response {}'.format(resp.status_code, resp.content))
+
 
 client = Client(settings.CONST_HOOK_API['URL'])
 

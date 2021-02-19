@@ -39,7 +39,7 @@ UNIT_TEST = False
 
 ALLOWED_HOSTS = []
 
-SYSTEM_TOKEN = 'xxx'
+SYSTEM_TOKEN = 'newq4nTnxACU8hXEb8hWYVzRy22syPnmmtWpUKaQAEPyk'
 
 # Application definition
 
@@ -313,7 +313,8 @@ CONST_CORE_API = {
 PLAID_API = {
     "URL": "https://sandbox.plaid.com",
     "CLIENT_ID": "5efd315f4ba6640012dc8019",
-    "SECRET": "456cab4f77591fe5e12fa39532ff79"
+    "SECRET": "456cab4f77591fe5e12fa39532ff79",
+    "ENVIRONMENT": "sandbox",
 }
 
 FRONT_END_URL = 'https://staging.constant.money'
