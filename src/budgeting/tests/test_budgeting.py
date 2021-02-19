@@ -6,8 +6,27 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from budgeting.constants import DIRECTION
-from budgeting.factories import CategoryFactory, TransactionFactory, WalletFactory
+from budgeting.factories import CategoryFactory, TransactionFactory, WalletFactory, CategoryGroupFactory
 from common.test_utils import AuthenticationUtils
+
+
+class CategoryGroupTests(APITestCase):
+    def setUp(self):
+        group_1 = CategoryGroupFactory(name='Group 1')
+        group_2 = CategoryGroupFactory(name='Group 2')
+        CategoryFactory.create_batch(5, group=group_1, direction=DIRECTION.income)
+        CategoryFactory.create_batch(5, group=group_2, direction=DIRECTION.expense)
+        self.url = reverse('budget:categorygroup-list')
+
+    def test_list(self):
+        response = self.client.get(self.url, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.json()), 2)
+
+    def test_list_filter(self):
+        response = self.client.get(self.url + '?direction=' + DIRECTION.income, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.json()), 1)
 
 
 class CategoryTests(APITestCase):

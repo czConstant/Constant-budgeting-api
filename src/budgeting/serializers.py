@@ -1,12 +1,29 @@
 from rest_framework import serializers
 
-from budgeting.models import Category, Transaction, TransactionByDay, Wallet
+from budgeting.models import Category, Transaction, TransactionByDay, Wallet, CategoryGroup
 
 
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
         fields = ('id', 'name', 'code', 'direction', 'description')
+
+
+class CategoryGroupSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CategoryGroup
+        fields = ('name', 'categories')
+
+    categories = serializers.SerializerMethodField()
+
+    def get_categories(self, instance):
+        qs = instance.group_categories.all()
+        if 'request' in self.context:
+            direction = self.context['request'].query_params.get('direction')
+            if direction:
+                qs = qs.filter(direction=direction)
+        serializer = CategorySerializer(qs, many=True, context=self.context)
+        return serializer.data
 
 
 class WalletSerializer(serializers.ModelSerializer):

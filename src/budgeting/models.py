@@ -96,12 +96,12 @@ class Category(TimestampedModel):
     direction = models.CharField(max_length=50, choices=DIRECTION, default=DIRECTION.income)
     order = models.IntegerField(default=0)
     deleted_at = models.DateTimeField(null=True)
-    group = models.ForeignKey(CategoryGroup, related_name='category_groups', null=True, on_delete=models.SET_NULL)
+    group = models.ForeignKey(CategoryGroup, related_name='group_categories', null=True, on_delete=models.SET_NULL)
 
 
 class CategoryMapping(TimestampedModel):
     name = models.CharField(max_length=255)
-    category = models.ForeignKey(CategoryGroup, related_name='category_mappings', on_delete=models.CASCADE)
+    category = models.ForeignKey(Category, related_name='category_mappings', on_delete=models.CASCADE)
 
 
 class Wallet(TimestampedModel):

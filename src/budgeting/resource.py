@@ -8,12 +8,40 @@ from rest_framework.response import Response
 from rest_framework.viewsets import ReadOnlyModelViewSet, ModelViewSet
 
 from budgeting.constants import DIRECTION
-from budgeting.models import Category, Transaction, Wallet
+from budgeting.models import Category, Transaction, Wallet, CategoryGroup
 from budgeting.queries import TransactionQueries
 from budgeting.serializers import CategorySerializer, TransactionSerializer, TransactionByDaySerializer, \
-    WalletSerializer
+    WalletSerializer, CategoryGroupSerializer
 from common.http import StandardPagination
 
+
+class CategoryGroupViewSet(ReadOnlyModelViewSet):
+    permission_classes = (AllowAny,)
+    serializer_class = CategoryGroupSerializer
+    queryset = CategoryGroup.objects.none()
+
+    def get_queryset(self):
+        qs = CategoryGroup.objects.filter(deleted_at__isnull=True).order_by('order')
+        return qs
+
+    def list(self, request, *args, **kwargs):
+        # Inherited
+        queryset = self.filter_queryset(self.get_queryset())
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        # End
+
+        # Hack serializer
+        data = serializer.data
+        result = [item for item in data if len(item['categories']) > 0]
+        # End
+
+        return Response(result)
 
 class CategoryFilter(filters.FilterSet):
     class Meta:

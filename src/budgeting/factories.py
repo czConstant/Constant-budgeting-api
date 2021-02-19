@@ -5,11 +5,18 @@ import factory
 from budgeting.constants import DIRECTION
 
 
+class CategoryGroupFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = 'budgeting.CategoryGroup'
+
+    name = 'Category Group'
+
+
 class CategoryFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = 'budgeting.Category'
 
-    name = 'Name'
+    name = 'Category'
     description = 'Description'
     code = 'code'
 
