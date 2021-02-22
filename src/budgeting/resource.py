@@ -10,9 +10,9 @@ from rest_framework.viewsets import ReadOnlyModelViewSet, ModelViewSet
 
 from budgeting.constants import DIRECTION
 from budgeting.models import Category, Transaction, Wallet, CategoryGroup
-from budgeting.queries import TransactionQueries
+from budgeting.queries import TransactionQueries, WalletQueries
 from budgeting.serializers import CategorySerializer, TransactionSerializer, TransactionByDaySerializer, \
-    WalletSerializer, CategoryGroupSerializer
+    WalletSerializer, CategoryGroupSerializer, WalletBalanceSerializer
 from common.http import StandardPagination
 
 
@@ -84,6 +84,13 @@ class WalletViewSet(ReadOnlyModelViewSet):
             'type': 'total_wallet'
         })
         return Response(result_list)
+
+    @action(detail=False, methods=['get'], url_path='balance')
+    def balance(self, request):
+        qs = WalletQueries.wallet_balance(request.user.user_id)
+        data = WalletBalanceSerializer(qs, many=True).data
+
+        return Response(data)
 
 
 class TransactionFilter(filters.FilterSet):

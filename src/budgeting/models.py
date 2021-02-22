@@ -137,3 +137,16 @@ class TransactionByDay(models.Model):
     income_amount = models.DecimalField(max_digits=18, decimal_places=2)
     expense_amount = models.DecimalField(max_digits=18, decimal_places=2)
     transaction_at = models.DateField()
+
+
+class WalletBalance(models.Model):
+    class Meta:
+        managed = False
+
+    user_id = models.IntegerField()
+    wallet_id = models.IntegerField()
+    name = models.CharField(max_length=255)
+    type = models.CharField(max_length=255)
+    income_amount = models.DecimalField(max_digits=18, decimal_places=2)
+    expense_amount = models.DecimalField(max_digits=18, decimal_places=2)
+    balance = models.DecimalField(max_digits=18, decimal_places=2)

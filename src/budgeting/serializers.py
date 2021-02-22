@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from budgeting.models import Category, Transaction, TransactionByDay, Wallet, CategoryGroup
+from budgeting.models import Category, Transaction, TransactionByDay, Wallet, CategoryGroup, WalletBalance
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -31,6 +31,12 @@ class WalletSerializer(serializers.ModelSerializer):
     class Meta:
         model = Wallet
         fields = ('id', 'name')
+
+
+class WalletBalanceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = WalletBalance
+        fields = '__all__'
 
 
 class TransactionSerializer(serializers.ModelSerializer):

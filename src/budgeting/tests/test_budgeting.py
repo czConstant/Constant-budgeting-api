@@ -53,6 +53,47 @@ class WalletTests(APITestCase):
         # Wallet number 0
         self.assertEqual(len(response.json()), 10 + 1)
 
+    def test_balance(self):
+        wallet = WalletFactory(user_id=self.user_id)
+        # +50
+        TransactionFactory.create_batch(5, user_id=1, transaction_at=datetime(2021, 1, 1),
+                                        direction=DIRECTION.income, wallet=wallet)
+        # -20
+        TransactionFactory.create_batch(2, user_id=1, transaction_at=datetime(2021, 1, 1),
+                                        direction=DIRECTION.expense, wallet=wallet)
+        # +30
+        TransactionFactory.create_batch(3, user_id=1, transaction_at=datetime(2021, 2, 1),
+                                        direction=DIRECTION.income, wallet=wallet)
+        # -10
+        TransactionFactory.create_batch(1, user_id=1, transaction_at=datetime(2021, 2, 1),
+                                        direction=DIRECTION.expense, wallet=wallet)
+
+        # +20
+        TransactionFactory.create_batch(2, user_id=1, transaction_at=datetime(2021, 1, 1),
+                                        direction=DIRECTION.income)
+        # -10
+        TransactionFactory.create_batch(1, user_id=1, transaction_at=datetime(2021, 1, 1),
+                                        direction=DIRECTION.expense)
+        # +40
+        TransactionFactory.create_batch(4, user_id=1, transaction_at=datetime(2021, 2, 1),
+                                        direction=DIRECTION.income)
+        # -20
+        TransactionFactory.create_batch(2, user_id=1, transaction_at=datetime(2021, 2, 1),
+                                        direction=DIRECTION.expense)
+
+        url = reverse('budget:wallet-balance')
+        response = self.client.get(url, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.json()
+        print(data)
+        self.assertEqual(Decimal(data[1]['income_amount']), Decimal(80))
+        self.assertEqual(Decimal(data[1]['expense_amount']), Decimal(30))
+        self.assertEqual(Decimal(data[1]['balance']), Decimal(50))
+
+        self.assertEqual(Decimal(data[0]['income_amount']), Decimal(60))
+        self.assertEqual(Decimal(data[0]['expense_amount']), Decimal(30))
+        self.assertEqual(Decimal(data[0]['balance']), Decimal(30))
+
 
 class TransactionTests(APITestCase):
     def setUp(self):
@@ -211,4 +252,3 @@ class TransactionFilterTests(APITestCase):
         self.assertEqual(Decimal(data['current_balance']), Decimal(20))
         self.assertEqual(Decimal(data['previous_balance']), Decimal(10))
         self.assertEqual(Decimal(data['balance']), Decimal(30))
-
