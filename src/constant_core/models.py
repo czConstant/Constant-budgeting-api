@@ -83,6 +83,10 @@ class User(models.Model):
     def user_id(self):
         return self.id
 
+    @property
+    def internal_user(self):
+        return self.account_type == 2
+
     def build_dict(self):
         return {
             'full_name': self.full_name,

@@ -25,7 +25,7 @@ urlpatterns = [
     path('budgeting-api/__admin/', admin.site.urls),
     path('budgeting-api/', StartView.as_view()),
     path('budgeting-api/', include('budgeting.urls')),
-    # path('budgeting-api/', include('budgeting_job.urls')),
+    path('budgeting-api/', include('budgeting_job.urls')),
     # path('budgeting-api/', include('budgeting_admin.urls')),
     # path('budgeting-api/', include('budgeting_hook.urls')),
     path('budgeting-api/', include('budgeting_pubsub.urls')),

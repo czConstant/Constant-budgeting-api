@@ -1,6 +1,7 @@
 import json
 from unittest.mock import MagicMock
 
+from budgeting.business.transaction import TransactionBusiness
 from constant_core.business import ConstantCoreBusiness
 from constant_core.models import User, Reserves, PlaidAccounts, AdminLogActions, AdminPermissions
 from constant_core.queries import BackendQuery
@@ -129,6 +130,13 @@ class BackendQueryMock(object):
         ), ])
         BackendQuery.check_admin_permission = mock
 
+        return mock
+
+
+class TransactionBusinessMock(object):
+    def import_transaction_from_plaid(self):
+        mock = MagicMock(return_value=None)
+        TransactionBusiness.import_transaction_from_plaid = mock
         return mock
 
 

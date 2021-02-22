@@ -1,6 +1,8 @@
+import copy
 import json
 import logging
 import time
+import traceback
 
 from django.core.serializers.json import DjangoJSONEncoder
 from django.utils.deprecation import MiddlewareMixin
@@ -69,11 +71,18 @@ class RequestLogMiddleware(MiddlewareMixin):
         super().__init__(*args, **kwargs)
 
     def process_request(self, request):
+        request.traceback = None
+        request.error_text = None
         if str(request.get_full_path()).startswith(RequestLogMiddleware.SERVICE_URL):
             request.start_time = time.time()
 
+    def process_exception(self, request, exception):
+        request.traceback = traceback.format_exc()
+        request.error_text = str(exception)
+
     def extract_log_info(self, request, response=None, exception=None):
         """Extract appropriate log info from requests/responses/exceptions."""
+        request_body = copy.copy(request.body)
         log_data = {
             'ip': request.META.get('HTTP_IP') if request.META.get('HTTP_IP') else request.META['REMOTE_ADDR'],
             'method': request.method,
@@ -87,7 +96,12 @@ class RequestLogMiddleware(MiddlewareMixin):
             'os': request.META.get('HTTP_OS'),
             'country': request.META.get('HTTP_COUNTRY'),
             'email': request.user.email if request.user and not request.user.is_anonymous else '',
-            'user_id': request.user.user_id if request.user and not request.user.is_anonymous else ''
+            'user_id': request.user.user_id if request.user and not request.user.is_anonymous else '',
+            'body_request': str(request_body)[:1000] if request.POST else '',
+            'body_response': response.content.decode('utf-8')[:1000],
+            'stacktrace': request.traceback,
+            'error_text': request.error_text,
+
         }
         return log_data
 
@@ -97,10 +111,6 @@ class RequestLogMiddleware(MiddlewareMixin):
             if str(request.get_full_path()).startswith(RequestLogMiddleware.SERVICE_URL):
                 log_data = self.extract_log_info(request=request,
                                                  response=response)
-                # log_str = json.dumps(log_data, cls=DjangoJSONEncoder) + '\n\r'
-                # Open a file with access mode 'a'
-                # with open("/elk/filebeat/exchange-api.log", "a") as file_object:
-                #     file_object.write(log_str)
 
                 log_str = json.dumps(log_data, cls=DjangoJSONEncoder)
                 logger.info(log_str)

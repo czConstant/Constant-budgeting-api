@@ -1,3 +1,6 @@
+from datetime import datetime
+from decimal import Decimal
+
 from django.contrib.auth.models import User
 from django.db import models
 from django.utils import timezone
@@ -5,6 +8,7 @@ from django.utils.functional import cached_property
 
 from budgeting.constants import DIRECTION
 from common.business import get_now
+from constant_core.business import ConstantCoreBusiness
 from constant_core.models import User as CoreUser
 
 
@@ -14,7 +18,6 @@ class ConstUser(User):
 
     user_id = models.IntegerField()
     token = models.TextField()
-    company_id = models.IntegerField()  # Current working company
 
     @staticmethod
     def from_user(user: CoreUser):
@@ -25,7 +28,7 @@ class ConstUser(User):
 
     @cached_property
     def get_db_user(self) -> CoreUser:
-        return CoreUser.objects.get(id=self.user_id)
+        return ConstantCoreBusiness.get_user(self.user_id)
 
     @property
     def c_first_name(self):
@@ -40,13 +43,90 @@ class ConstUser(User):
         return self.get_db_user.last_name
 
     @property
+    def role_id(self) -> int:
+        return self.get_db_user.user_role_id
+
+    @property
     def full_name(self) -> str:
-        return '%s %s'.format(self.c_first_name, self.c_last_name)
+        return self.get_db_user.full_name
+
+    @property
+    def dob(self) -> str:
+        return self.get_db_user.dob
+
+    @property
+    def phone_number(self) -> str:
+        return self.get_db_user.phone_number
+
+    @property
+    def verified_level(self) -> int:
+        return self.get_db_user.verified_level
+
+    @property
+    def constant_balance(self) -> Decimal:
+        return self.get_db_user.constant_balance_friendly
+
+    @property
+    def constant_balance_holding(self) -> Decimal:
+        return self.get_db_user.constant_balance_holding_friendly
+
+    @property
+    def pro_saving_user(self) -> bool:
+        return self.get_db_user.pro_saving_user
+
+    @property
+    def agent_user(self) -> bool:
+        return self.get_db_user.agent_user
+
+    @property
+    def lo_user(self) -> bool:
+        return self.get_db_user.lo_user
+
+    @property
+    def language(self) -> str:
+        return self.get_db_user.language
+
+    @property
+    def white_label(self) -> bool:
+        return self.get_db_user.white_label
+
+    @property
+    def permissions(self) -> str:
+        return self.get_db_user.permissions
+
+    @property
+    def membership(self) -> int:
+        return self.get_db_user.membership
+
+    @property
+    def withdraw_confirmed_email_on(self) -> bool:
+        return self.get_db_user.withdraw_confirmed_email_on
+
+    @property
+    def is_kyc(self) -> bool:
+        return self.verified_level in (6, 7)
+
+    @property
+    def tax_country(self) -> str:
+        return self.get_db_user.tax_country
+
+    @property
+    def suspend_withdrawal_to(self) -> datetime:
+        return self.get_db_user.suspend_withdrawal_to
+
+    @property
+    def account_type(self) -> int:
+        return self.get_db_user.account_type
+
+    @property
+    def internal_user(self) -> bool:
+        return self.get_db_user.internal_user
 
     def build_dict(self) -> dict:
         return {
             'full_name': self.full_name,
             'email': self.email,
+            'balance': '{:.2f}'.format(self.constant_balance)
         }
 
 
@@ -55,25 +135,57 @@ class SystemConstUser(ConstUser):
         managed = False
         proxy = True
 
-    @cached_property
-    def get_db_user(self) -> CoreUser:
-        return CoreUser.objects.get(id=self.user_id)
-
     @property
-    def c_first_name(self):
-        return self.get_db_user.first_name
-
-    @property
-    def c_middle_name(self):
-        return self.get_db_user.middle_name
-
-    @property
-    def c_last_name(self):
-        return self.get_db_user.last_name
+    def role_id(self) -> int:
+        return 999
 
     @property
     def full_name(self) -> str:
-        return '%s %s'.format(self.c_first_name, self.c_last_name)
+        return 'admin'
+
+    @property
+    def dob(self) -> str:
+        return ''
+
+    @property
+    def phone_number(self) -> str:
+        return ''
+
+    @property
+    def verified_level(self) -> int:
+        return 999
+
+    @property
+    def constant_balance(self) -> Decimal:
+        return Decimal(0)
+
+    @property
+    def constant_balance_holding(self) -> Decimal:
+        return Decimal(0)
+
+    @property
+    def pro_saving_user(self) -> bool:
+        return False
+
+    @property
+    def agent_user(self) -> bool:
+        return False
+
+    @property
+    def language(self) -> str:
+        return 'en'
+
+    @property
+    def white_label(self) -> bool:
+        return False
+
+    @property
+    def permissions(self) -> str:
+        return ''
+
+    @property
+    def membership(self) -> int:
+        return 0
 
 
 class TimestampedModel(models.Model):
@@ -111,6 +223,9 @@ class Wallet(TimestampedModel):
     name = models.CharField(max_length=255, null=True, blank=True)
     plaid_id = models.IntegerField(null=True)
     last_import = models.DateField(default=timezone.now)
+    error = models.CharField(max_length=255, null=True, blank=True)
+    error_details = models.TextField(null=True, blank=True)
+    error_at = models.DateTimeField(null=True)
     deleted_at = models.DateTimeField(null=True)
 
 
