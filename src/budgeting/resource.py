@@ -1,3 +1,5 @@
+from datetime import date, timedelta
+
 from django_filters import rest_framework as filters
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import mixins, status
@@ -14,7 +16,9 @@ from budgeting.models import Category, Transaction, Wallet, CategoryGroup
 from budgeting.queries import TransactionQueries, WalletQueries
 from budgeting.serializers import CategorySerializer, TransactionSerializer, TransactionByDaySerializer, \
     WalletSerializer, CategoryGroupSerializer, WalletBalanceSerializer, TransactionLinkedBankSerializer
+from common.business import get_now
 from common.http import StandardPagination
+from constant_core.business import ConstantCoreBusiness
 
 
 class CategoryGroupViewSet(ReadOnlyModelViewSet):
@@ -76,6 +80,11 @@ class WalletViewSet(mixins.CreateModelMixin,
         return Wallet.objects.filter(user_id=self.request.user.user_id,
                                      deleted_at__isnull=True).order_by('-created_at')
 
+    def check_object_permissions(self, request, obj):
+        super(WalletViewSet, self).check_object_permissions(request, obj)
+        if not request.user.user_id == obj.user_id:
+            self.permission_denied(request)
+
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
         serializer = self.get_serializer(queryset, many=True)
@@ -90,10 +99,36 @@ class WalletViewSet(mixins.CreateModelMixin,
         return Response(result_list)
 
     def create(self, request, *args, **kwargs):
-        pass
+        plaid_id = request.data.get('plaid_id')
+        if not plaid_id:
+            raise ValidationError('plaid_id is required')
+        plaid = ConstantCoreBusiness.get_plaid_account(plaid_id)
+        if not plaid:
+            raise ValidationError('Invalid plaid_id')
+
+        wallet = Wallet.objects.filter(user_id=request.user.user_id, plaid_id=plaid.id).first()
+        if wallet:
+            wallet.deleted_at = None
+            wallet.save()
+        else:
+            last_day_of_prev_month = date.today().replace(day=1) - timedelta(days=1)
+            start_day_of_prev_month = date.today().replace(day=1) - timedelta(days=last_day_of_prev_month.day)
+            wallet = Wallet.objects.create(
+                user_id=request.user.user_id,
+                plaid_id=plaid.id,
+                name=plaid.plaid_name,
+                last_import=start_day_of_prev_month,
+            )
+
+        serializer = WalletSerializer(wallet)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     def destroy(self, request, *args, **kwargs):
-        pass
+        instance = self.get_object()
+        instance.deleted_at = get_now()
+        instance.save()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(detail=False, methods=['get'], url_path='balance')
     def balance(self, request):
@@ -126,7 +161,8 @@ class TransactionViewSet(ModelViewSet):
     pagination_class = StandardPagination
 
     def get_queryset(self):
-        qs = Transaction.objects.filter(user_id=self.request.user.user_id).order_by('-created_at')
+        qs = Transaction.objects.filter(user_id=self.request.user.user_id,
+                                        wallet__deleted_at__isnull=True)
         wallet_id = self.request.query_params.get('wallet')
         if wallet_id is not None:
             if wallet_id == '0':
@@ -134,7 +170,14 @@ class TransactionViewSet(ModelViewSet):
             else:
                 qs = qs.filter(wallet_id=wallet_id)
 
+        qs = qs.order_by('-created_at')
+
         return qs
+
+    def check_object_permissions(self, request, obj):
+        super(TransactionViewSet, self).check_object_permissions(request, obj)
+        if not request.user.user_id == obj.user_id:
+            self.permission_denied(request)
 
     def perform_create(self, serializer):
         serializer.save(user_id=self.request.user.user_id)
@@ -154,11 +197,6 @@ class TransactionViewSet(ModelViewSet):
         if instance.wallet_id is None:
             self.perform_destroy(instance)
         return Response(status=status.HTTP_204_NO_CONTENT)
-
-    def check_object_permissions(self, request, obj):
-        super(TransactionViewSet, self).check_object_permissions(request, obj)
-        if not request.user.user_id == obj.user_id:
-            self.permission_denied(request)
 
     @action(detail=False, methods=['get'], url_path='by-month')
     def by_month(self, request):

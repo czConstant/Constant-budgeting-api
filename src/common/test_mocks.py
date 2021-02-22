@@ -87,6 +87,17 @@ class CoreMock(object):
 
         return mock
 
+    def get_plaid_account(self, data=None):
+        obj = PlaidAccounts(id=1,
+                            institution_name='Plaid',
+                            account_subtype='savings')
+        if data:
+            obj.id = data.get('id', obj.id)
+        mock = MagicMock(return_value=obj)
+        ConstantCoreBusiness.get_plaid_account = mock
+
+        return mock
+
     def create_admin_log_action(self):
         mock = MagicMock(return_value=AdminLogActions(id=1))
         ConstantCoreBusiness.create_admin_log_action = mock

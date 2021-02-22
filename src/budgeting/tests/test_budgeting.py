@@ -7,7 +7,9 @@ from rest_framework.test import APITestCase
 
 from budgeting.constants import DIRECTION
 from budgeting.factories import CategoryFactory, TransactionFactory, WalletFactory, CategoryGroupFactory
-from budgeting.models import Transaction
+from budgeting.models import Transaction, Wallet
+from common.business import get_now
+from common.test_mocks import CoreMock
 from common.test_utils import AuthenticationUtils
 
 
@@ -48,11 +50,47 @@ class WalletTests(APITestCase):
         WalletFactory.create_batch(10, user_id=self.user_id)
         self.url = reverse('budget:wallet-list')
 
+        self.core_mock = CoreMock()
+
     def test_list(self):
         response = self.client.get(self.url, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         # Wallet number 0
         self.assertEqual(len(response.json()), 10 + 1)
+
+    def test_add(self):
+        self.core_mock.get_plaid_account()
+        data = {
+            'plaid_id': 1
+        }
+        response = self.client.post(self.url, data=data, format='json')
+        resp = response.json()
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        w = Wallet.objects.get(id=resp['id'])
+        self.assertEqual(w.name, 'Plaid (savings)')
+        self.assertEqual(w.plaid_id, 1)
+
+    def test_add_after_delete(self):
+        WalletFactory(user_id=self.user_id, deleted_at=get_now(), name='Deleted', plaid_id=2)
+        self.core_mock.get_plaid_account(data={'id': 2})
+        data = {
+            'plaid_id': 2
+        }
+        response = self.client.post(self.url, data=data, format='json')
+        resp = response.json()
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        w = Wallet.objects.get(id=resp['id'])
+        self.assertEqual(w.name, 'Deleted')
+        self.assertEqual(w.plaid_id, 2)
+
+    def test_delete(self):
+        obj = WalletFactory(user_id=self.user_id, name='Deleted')
+
+        response = self.client.delete(self.url + '{}/'.format(obj.id), format='json')
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        w = Wallet.objects.get(id=obj.id)
+        self.assertIsNone(obj.deleted_at)
+        self.assertIsNotNone(w.deleted_at)
 
     def test_balance(self):
         wallet = WalletFactory(user_id=self.user_id)

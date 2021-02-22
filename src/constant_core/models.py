@@ -196,8 +196,12 @@ class PlaidAccounts(models.Model):
     deleted_at = models.DateTimeField(null=True)
     access_token = models.CharField(max_length=255)
     institution_name = models.CharField(max_length=255)
+    account_subtype = models.CharField(max_length=255)
     is_default = models.BooleanField()
 
+    @property
+    def plaid_name(self):
+        return '{} ({})'.format(self.institution_name, self.account_subtype)
 
 class AdminPages(models.Model):
     class Meta:
