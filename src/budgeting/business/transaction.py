@@ -41,14 +41,16 @@ class TransactionBusiness:
                 cats = transaction.get('category', [])
                 cats = cats if cats else []
                 if cats:
-                    cats.sort(key=lambda item: len(item), reverse=True)
-                    picked_cat_txt = cats[0]
-                    if picked_cat_txt not in cache_category_mapping[direction]:
-                        obj = CategoryMapping.objects.filter(name=picked_cat_txt).first()
-                        if obj:
-                            cache_category_mapping[direction][picked_cat_txt] = obj
-                    if picked_cat_txt in cache_category_mapping[direction]:
-                        picked_cat = cache_category_mapping[direction][picked_cat_txt]
+                    cats.reverse()
+                    for cat in cats:
+                        picked_cat_txt = cat
+                        if picked_cat_txt not in cache_category_mapping[direction]:
+                            obj = CategoryMapping.objects.filter(name=picked_cat_txt).first()
+                            if obj:
+                                cache_category_mapping[direction][picked_cat_txt] = obj.category
+                        if picked_cat_txt in cache_category_mapping[direction]:
+                            picked_cat = cache_category_mapping[direction][picked_cat_txt]
+                            break
                     else:
                         picked_cat = cache_category_mapping[direction][default_category]
 

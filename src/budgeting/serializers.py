@@ -12,7 +12,7 @@ class CategorySerializer(serializers.ModelSerializer):
 class CategoryGroupSerializer(serializers.ModelSerializer):
     class Meta:
         model = CategoryGroup
-        fields = ('name', 'categories')
+        fields = ('name', 'code', 'categories')
 
     categories = serializers.SerializerMethodField()
 
