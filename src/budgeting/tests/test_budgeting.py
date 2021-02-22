@@ -85,7 +85,7 @@ class WalletTests(APITestCase):
         response = self.client.get(url, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.json()
-        print(data)
+
         self.assertEqual(Decimal(data[1]['income_amount']), Decimal(80))
         self.assertEqual(Decimal(data[1]['expense_amount']), Decimal(30))
         self.assertEqual(Decimal(data[1]['balance']), Decimal(50))
@@ -119,6 +119,18 @@ class TransactionTests(APITestCase):
             'category': cat.id,
             'amount': '10.00',
             'direction': DIRECTION.income,
+        }
+        response = self.client.post(self.url, data=data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_add_transaction_at(self):
+        cat = CategoryFactory()
+        data = {
+            'category': cat.id,
+            'amount': '10.00',
+            'direction': DIRECTION.income,
+            'transaction_at': '2021-01-02T00:00:00',
+            'wallet': 0,
         }
         response = self.client.post(self.url, data=data, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)

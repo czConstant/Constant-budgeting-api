@@ -102,7 +102,7 @@ select t.user_id as id,
 from budgeting_transaction t
 join budgeting_wallet bw on t.wallet_id = bw.id
 where 1=1
-and t.wallet_id is not null
+and t.wallet_id is not null and bw.deleted_at is null
 and t.user_id = %(user_id)s
 group by t.user_id, t.wallet_id
 union all

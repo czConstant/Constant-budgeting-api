@@ -4,6 +4,7 @@ from django.utils import timezone
 from django.utils.functional import cached_property
 
 from budgeting.constants import DIRECTION
+from common.business import get_now
 from constant_core.models import User as CoreUser
 
 
@@ -109,6 +110,7 @@ class Wallet(TimestampedModel):
     user_id = models.IntegerField()
     name = models.CharField(max_length=255, null=True, blank=True)
     plaid_id = models.IntegerField(null=True)
+    last_import = models.DateField(default=timezone.now)
     deleted_at = models.DateTimeField(null=True)
 
 

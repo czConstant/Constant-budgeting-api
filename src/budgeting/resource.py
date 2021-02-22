@@ -1,12 +1,13 @@
 from django_filters import rest_framework as filters
 from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import mixins
 
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.filters import OrderingFilter
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
-from rest_framework.viewsets import ReadOnlyModelViewSet, ModelViewSet
+from rest_framework.viewsets import ReadOnlyModelViewSet, ModelViewSet, GenericViewSet
 
 from budgeting.constants import DIRECTION
 from budgeting.models import Category, Transaction, Wallet, CategoryGroup
@@ -63,7 +64,10 @@ class CategoryViewSet(ReadOnlyModelViewSet):
     queryset = Category.objects.filter(deleted_at__isnull=True).order_by('order')
 
 
-class WalletViewSet(ReadOnlyModelViewSet):
+class WalletViewSet(mixins.CreateModelMixin,
+                    mixins.DestroyModelMixin,
+                    mixins.ListModelMixin,
+                    GenericViewSet):
     permission_classes = (IsAuthenticated,)
     serializer_class = WalletSerializer
     queryset = Wallet.objects.none()
@@ -84,6 +88,12 @@ class WalletViewSet(ReadOnlyModelViewSet):
             'type': 'total_wallet'
         })
         return Response(result_list)
+
+    def create(self, request, *args, **kwargs):
+        pass
+
+    def destroy(self, request, *args, **kwargs):
+        pass
 
     @action(detail=False, methods=['get'], url_path='balance')
     def balance(self, request):
@@ -124,6 +134,13 @@ class TransactionViewSet(ModelViewSet):
             qs = qs.filter(wallet_id=wallet_id)
 
         return qs
+    
+    def create(self, request, *args, **kwargs):
+        wallet_id = request.data.get('wallet')
+        if wallet_id is not None and int(wallet_id) == 0:
+            request.data.pop('wallet')
+
+        return super(TransactionViewSet, self).create(request, *args, **kwargs)
 
     def perform_create(self, serializer):
         serializer.save(user_id=self.request.user.user_id)
