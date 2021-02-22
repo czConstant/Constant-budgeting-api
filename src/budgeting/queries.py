@@ -6,7 +6,10 @@ class TransactionQueries:
     def get_transaction_by_month(user_id: int, month: str, wallet_id: int = None):
         wallet_cond = ''
         if wallet_id:
-            wallet_cond = 'and t.wallet_id = %(wallet_id)s'
+            if wallet_id == '0':
+                wallet_cond = 'and t.wallet_id is null'
+            else:
+                wallet_cond = 'and t.wallet_id = %(wallet_id)s'
 
         txt = '''select t.user_id as id, 
        t.user_id,

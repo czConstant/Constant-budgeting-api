@@ -71,6 +71,19 @@ class WalletViewSet(ReadOnlyModelViewSet):
         return Wallet.objects.filter(user_id=self.request.user.user_id,
                                      deleted_at__isnull=True).order_by('-created_at')
 
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        serializer = self.get_serializer(queryset, many=True)
+        result_list = serializer.data
+        for item in result_list:
+            item['type'] = 'linked_bank'
+        result_list.insert(0, {
+            'id': 0,
+            'name': 'Total Wallet',
+            'type': 'total_wallet'
+        })
+        return Response(serializer.data)
+
 
 class TransactionFilter(filters.FilterSet):
     class Meta:
@@ -84,7 +97,6 @@ class TransactionFilter(filters.FilterSet):
     )
     from_date = filters.DateFilter(field_name='transaction_at', lookup_expr='gte')
     to_date = filters.DateFilter(field_name='transaction_at', lookup_expr='lte')
-    wallet = filters.NumberFilter(field_name='wallet_id')
 
 
 class TransactionViewSet(ModelViewSet):
@@ -96,7 +108,14 @@ class TransactionViewSet(ModelViewSet):
     pagination_class = StandardPagination
 
     def get_queryset(self):
-        return Transaction.objects.filter(user_id=self.request.user.user_id).order_by('-created_at')
+        qs = Transaction.objects.filter(user_id=self.request.user.user_id).order_by('-created_at')
+        wallet_id = self.request.query_params.get('wallet')
+        if wallet_id == '0':
+            qs = qs.filter(wallet__isnull=True)
+        else:
+            qs = qs.filter(wallet_id=wallet_id)
+
+        return qs
 
     def perform_create(self, serializer):
         serializer.save(user_id=self.request.user.user_id)

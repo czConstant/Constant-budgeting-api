@@ -120,6 +120,10 @@ class TransactionFilterTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.json()['results']), 5)
 
+        response = self.client.get(self.url + '?wallet=0', format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.json()['results']), 5)
+
     def test_summary_filter(self):
         TransactionFactory.create_batch(5, user_id=1, transaction_at=datetime(2021, 2, 20))
 
@@ -134,5 +138,8 @@ class TransactionFilterTests(APITestCase):
         TransactionFactory.create_batch(5, user_id=1, transaction_at=datetime(2021, 2, 20))
         url = reverse('budget:transaction-by-month')
         response = self.client.get(url + '?month=2021-02' + '&wallet=' + str(wallet.id), format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(Decimal(response.json()[0]['expense_amount']), Decimal(50))
+        response = self.client.get(url + '?month=2021-02' + '&wallet=0', format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(Decimal(response.json()[0]['expense_amount']), Decimal(50))
