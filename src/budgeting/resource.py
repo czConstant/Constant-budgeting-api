@@ -43,6 +43,7 @@ class CategoryGroupViewSet(ReadOnlyModelViewSet):
 
         return Response(result)
 
+
 class CategoryFilter(filters.FilterSet):
     class Meta:
         model = Category
