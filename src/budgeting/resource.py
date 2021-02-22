@@ -82,7 +82,7 @@ class WalletViewSet(ReadOnlyModelViewSet):
             'name': 'Total Wallet',
             'type': 'total_wallet'
         })
-        return Response(serializer.data)
+        return Response(result_list)
 
 
 class TransactionFilter(filters.FilterSet):
