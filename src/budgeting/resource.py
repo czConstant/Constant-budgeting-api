@@ -2,6 +2,7 @@ from django_filters import rest_framework as filters
 from django_filters.rest_framework import DjangoFilterBackend
 
 from rest_framework.decorators import action
+from rest_framework.exceptions import ValidationError
 from rest_framework.filters import OrderingFilter
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
@@ -130,8 +131,22 @@ class TransactionViewSet(ModelViewSet):
         # Format: 2021-02
         month = request.query_params.get('month')
         wallet_id = request.query_params.get('wallet')
+        if not month:
+            raise ValidationError('month is required as format YY-MMMM')
 
         qs = TransactionQueries.get_transaction_by_month(request.user.user_id, month, wallet_id=wallet_id)
         data = TransactionByDaySerializer(qs, many=True).data
+
+        return Response(data)
+
+    @action(detail=False, methods=['get'], url_path='month-summary')
+    def month_summary(self, request):
+        # Format: 2021-02
+        month = request.query_params.get('month')
+        wallet_id = request.query_params.get('wallet')
+        if not month:
+            raise ValidationError('month is required as format YY-MMMM')
+
+        data = TransactionQueries.get_transaction_month_summary(request.user.user_id, month, wallet_id=wallet_id)
 
         return Response(data)

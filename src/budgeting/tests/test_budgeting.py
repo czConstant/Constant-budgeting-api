@@ -125,7 +125,7 @@ class TransactionFilterTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.json()['results']), 5)
 
-    def test_summary_filter(self):
+    def test_by_month_filter(self):
         TransactionFactory.create_batch(5, user_id=1, transaction_at=datetime(2021, 2, 20))
 
         url = reverse('budget:transaction-by-month')
@@ -133,7 +133,7 @@ class TransactionFilterTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(Decimal(response.json()[0]['expense_amount']), Decimal(50))
 
-    def test_summary_filter_wallet(self):
+    def test_by_month_filter_wallet(self):
         wallet = WalletFactory(user_id=self.user_id)
         TransactionFactory.create_batch(5, user_id=1, transaction_at=datetime(2021, 2, 20), wallet=wallet)
         TransactionFactory.create_batch(5, user_id=1, transaction_at=datetime(2021, 2, 20))
@@ -144,3 +144,71 @@ class TransactionFilterTests(APITestCase):
         response = self.client.get(url + '?month=2021-02' + '&wallet=0', format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(Decimal(response.json()[0]['expense_amount']), Decimal(50))
+
+    def test_month_summary_filter(self):
+        # +50
+        TransactionFactory.create_batch(5, user_id=1, transaction_at=datetime(2021, 1, 1), direction=DIRECTION.income)
+        # -20
+        TransactionFactory.create_batch(2, user_id=1, transaction_at=datetime(2021, 1, 1), direction=DIRECTION.expense)
+        # +30
+        TransactionFactory.create_batch(3, user_id=1, transaction_at=datetime(2021, 2, 1), direction=DIRECTION.income)
+        # -10
+        TransactionFactory.create_batch(1, user_id=1, transaction_at=datetime(2021, 2, 1), direction=DIRECTION.expense)
+
+        url = reverse('budget:transaction-month-summary')
+        response = self.client.get(url + '?month=2021-02', format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.json()
+        self.assertEqual(Decimal(data['income_amount']), Decimal(30))
+        self.assertEqual(Decimal(data['expense_amount']), Decimal(10))
+        self.assertEqual(Decimal(data['current_balance']), Decimal(20))
+        self.assertEqual(Decimal(data['previous_balance']), Decimal(30))
+        self.assertEqual(Decimal(data['balance']), Decimal(50))
+
+    def test_by_month_summary_wallet(self):
+        wallet = WalletFactory(user_id=self.user_id)
+        # +50
+        TransactionFactory.create_batch(5, user_id=1, transaction_at=datetime(2021, 1, 1),
+                                        direction=DIRECTION.income, wallet=wallet)
+        # -20
+        TransactionFactory.create_batch(2, user_id=1, transaction_at=datetime(2021, 1, 1),
+                                        direction=DIRECTION.expense, wallet=wallet)
+        # +30
+        TransactionFactory.create_batch(3, user_id=1, transaction_at=datetime(2021, 2, 1),
+                                        direction=DIRECTION.income, wallet=wallet)
+        # -10
+        TransactionFactory.create_batch(1, user_id=1, transaction_at=datetime(2021, 2, 1),
+                                        direction=DIRECTION.expense, wallet=wallet)
+
+        # +20
+        TransactionFactory.create_batch(2, user_id=1, transaction_at=datetime(2021, 1, 1),
+                                        direction=DIRECTION.income)
+        # -10
+        TransactionFactory.create_batch(1, user_id=1, transaction_at=datetime(2021, 1, 1),
+                                        direction=DIRECTION.expense)
+        # +40
+        TransactionFactory.create_batch(4, user_id=1, transaction_at=datetime(2021, 2, 1),
+                                        direction=DIRECTION.income)
+        # -20
+        TransactionFactory.create_batch(2, user_id=1, transaction_at=datetime(2021, 2, 1),
+                                        direction=DIRECTION.expense)
+
+        url = reverse('budget:transaction-month-summary')
+        response = self.client.get(url + '?month=2021-02' + '&wallet=' + str(wallet.id), format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.json()
+        self.assertEqual(Decimal(data['income_amount']), Decimal(30))
+        self.assertEqual(Decimal(data['expense_amount']), Decimal(10))
+        self.assertEqual(Decimal(data['current_balance']), Decimal(20))
+        self.assertEqual(Decimal(data['previous_balance']), Decimal(30))
+        self.assertEqual(Decimal(data['balance']), Decimal(50))
+
+        response = self.client.get(url + '?month=2021-02' + '&wallet=0', format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.json()
+        self.assertEqual(Decimal(data['income_amount']), Decimal(40))
+        self.assertEqual(Decimal(data['expense_amount']), Decimal(20))
+        self.assertEqual(Decimal(data['current_balance']), Decimal(20))
+        self.assertEqual(Decimal(data['previous_balance']), Decimal(10))
+        self.assertEqual(Decimal(data['balance']), Decimal(30))
+
