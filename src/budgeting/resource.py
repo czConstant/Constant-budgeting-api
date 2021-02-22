@@ -1,6 +1,6 @@
 from django_filters import rest_framework as filters
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import mixins
+from rest_framework import mixins, status
 
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
@@ -13,7 +13,7 @@ from budgeting.constants import DIRECTION
 from budgeting.models import Category, Transaction, Wallet, CategoryGroup
 from budgeting.queries import TransactionQueries, WalletQueries
 from budgeting.serializers import CategorySerializer, TransactionSerializer, TransactionByDaySerializer, \
-    WalletSerializer, CategoryGroupSerializer, WalletBalanceSerializer
+    WalletSerializer, CategoryGroupSerializer, WalletBalanceSerializer, TransactionLinkedBankSerializer
 from common.http import StandardPagination
 
 
@@ -128,22 +128,32 @@ class TransactionViewSet(ModelViewSet):
     def get_queryset(self):
         qs = Transaction.objects.filter(user_id=self.request.user.user_id).order_by('-created_at')
         wallet_id = self.request.query_params.get('wallet')
-        if wallet_id == '0':
-            qs = qs.filter(wallet__isnull=True)
-        else:
-            qs = qs.filter(wallet_id=wallet_id)
+        if wallet_id is not None:
+            if wallet_id == '0':
+                qs = qs.filter(wallet__isnull=True)
+            else:
+                qs = qs.filter(wallet_id=wallet_id)
 
         return qs
-    
-    def create(self, request, *args, **kwargs):
-        wallet_id = request.data.get('wallet')
-        if wallet_id is not None and int(wallet_id) == 0:
-            request.data.pop('wallet')
-
-        return super(TransactionViewSet, self).create(request, *args, **kwargs)
 
     def perform_create(self, serializer):
         serializer.save(user_id=self.request.user.user_id)
+
+    def get_serializer(self, *args, **kwargs):
+        serializer_class = self.get_serializer_class()
+
+        # Edit linked bank transaction
+        if args and isinstance(args[0], Transaction) and args[0].wallet_id is not None:
+            serializer_class = TransactionLinkedBankSerializer
+
+        kwargs.setdefault('context', self.get_serializer_context())
+        return serializer_class(*args, **kwargs)
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        if instance.wallet_id is None:
+            self.perform_destroy(instance)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     def check_object_permissions(self, request, obj):
         super(TransactionViewSet, self).check_object_permissions(request, obj)

@@ -7,6 +7,7 @@ from rest_framework.test import APITestCase
 
 from budgeting.constants import DIRECTION
 from budgeting.factories import CategoryFactory, TransactionFactory, WalletFactory, CategoryGroupFactory
+from budgeting.models import Transaction
 from common.test_utils import AuthenticationUtils
 
 
@@ -130,7 +131,6 @@ class TransactionTests(APITestCase):
             'amount': '10.00',
             'direction': DIRECTION.income,
             'transaction_at': '2021-01-02T00:00:00',
-            'wallet': 0,
         }
         response = self.client.post(self.url, data=data, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -146,11 +146,38 @@ class TransactionTests(APITestCase):
         response = self.client.put(url + '{}/'.format(obj.id), data=data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
+    def test_update_linked_bank(self):
+        wallet = WalletFactory(user_id=self.user_id)
+        obj = TransactionFactory(user_id=self.user_id, wallet=wallet)
+        url = reverse('budget:transaction-list')
+        data = {
+            'category': obj.category_id,
+            'amount': '20.00',
+            'direction': DIRECTION.income,
+            'note': 'Changed'
+        }
+        response = self.client.put(url + '{}/'.format(obj.id), data=data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        new_obj = Transaction.objects.get(id=obj.id)
+        self.assertEqual(obj.direction, new_obj.direction)
+        self.assertEqual(obj.amount, new_obj.amount)
+        self.assertNotEqual(obj.note, new_obj.note)
+
     def test_delete(self):
         obj = TransactionFactory(user_id=self.user_id)
         url = reverse('budget:transaction-list')
         response = self.client.delete(url + '{}/'.format(obj.id), format='json')
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+    def test_delete_linked_bank(self):
+        wallet = WalletFactory(user_id=self.user_id)
+        obj = TransactionFactory(user_id=self.user_id, wallet=wallet)
+        url = reverse('budget:transaction-list')
+        response = self.client.delete(url + '{}/'.format(obj.id), format='json')
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        new_obj = Transaction.objects.get(id=obj.id)
+        # Cannot delete linked bank transaction
+        self.assertEqual(obj.id, new_obj.id)
 
 
 class TransactionFilterTests(APITestCase):

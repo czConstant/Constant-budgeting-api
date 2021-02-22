@@ -44,17 +44,20 @@ class TransactionSerializer(serializers.ModelSerializer):
         model = Transaction
         fields = ('id', 'transaction_at', 'category',
                   'direction', 'amount', 'wallet', 'wallet_id', 'note')
-        read_only_fields = ('user_id', )
-        extra_kwargs = {
-            'user_id': {
-                'required': False
-            },
-        }
+        read_only_fields = ('wallet', )
 
     wallet_id = serializers.SerializerMethodField()
 
     def get_wallet_id(self, instance):
         return instance.wallet_id if instance.wallet_id else 0
+
+
+class TransactionLinkedBankSerializer(TransactionSerializer):
+    class Meta:
+        model = Transaction
+        fields = ('id', 'transaction_at', 'category',
+                  'direction', 'amount', 'wallet', 'wallet_id', 'note')
+        read_only_fields = ('transaction_at', 'direction', 'amount', 'wallet')
 
 
 class TransactionByDaySerializer(serializers.ModelSerializer):
