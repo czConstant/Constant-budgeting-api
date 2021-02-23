@@ -21,7 +21,7 @@ class ImportPlaidTransactionView(APIView):
     def post(self, request, format=None):
         wallets = Wallet.objects.filter(plaid_id__isnull=False,
                                         deleted_at__isnull=True,
-                                        last_import__lte=get_now())
+                                        last_import__lt=get_now().today())
         count = 0
         success_count = 0
         failed_count = 0
