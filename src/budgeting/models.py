@@ -1,3 +1,4 @@
+import json
 from datetime import datetime
 from decimal import Decimal
 
@@ -7,7 +8,6 @@ from django.utils import timezone
 from django.utils.functional import cached_property
 
 from budgeting.constants import DIRECTION
-from common.business import get_now
 from constant_core.business import ConstantCoreBusiness
 from constant_core.models import User as CoreUser
 
@@ -211,8 +211,10 @@ class Category(TimestampedModel):
     order = models.IntegerField(default=0)
     deleted_at = models.DateTimeField(null=True)
     group = models.ForeignKey(CategoryGroup, related_name='group_categories', null=True, on_delete=models.SET_NULL)
+    user_id = models.IntegerField(null=True)
 
     DEFAULT_CODE = 'others'
+    MANUAL_CODE = 'manual'
 
 
 class CategoryMapping(TimestampedModel):
@@ -223,6 +225,7 @@ class CategoryMapping(TimestampedModel):
 class Wallet(TimestampedModel):
     user_id = models.IntegerField()
     name = models.CharField(max_length=255, null=True, blank=True)
+    sub_name = models.CharField(max_length=255, null=True, blank=True)
     plaid_id = models.IntegerField(null=True)
     last_import = models.DateField(default=timezone.now)
     error = models.CharField(max_length=255, null=True, blank=True)
@@ -248,6 +251,13 @@ class Transaction(TimestampedModel):
     external_id = models.CharField(max_length=255, null=True, blank=True)
     detail = models.TextField(null=True, blank=True)
 
+    @cached_property
+    def detail_dict(self):
+        try:
+            return json.loads(self.detail)
+        except:
+            return {}
+
 
 class TransactionByDay(models.Model):
     class Meta:
@@ -266,6 +276,7 @@ class WalletBalance(models.Model):
     wallet_id = models.IntegerField()
     plaid_id = models.IntegerField()
     name = models.CharField(max_length=255)
+    sub_name = models.CharField(max_length=255)
     type = models.CharField(max_length=255)
     income_amount = models.DecimalField(max_digits=18, decimal_places=2)
     expense_amount = models.DecimalField(max_digits=18, decimal_places=2)

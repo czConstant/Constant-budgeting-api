@@ -96,6 +96,7 @@ select bw.user_id as id,
        bw.id as wallet_id,
        bw.plaid_id as plaid_id,
        bw.name,
+       bw.sub_name,
        'linked_bank' as `type`,
        sum(if(t.direction = 'income', t.amount, 0)) as income_amount,
        sum(if(t.direction = 'expense', t.amount, 0)) as expense_amount,
@@ -105,13 +106,14 @@ left join budgeting_transaction t on t.wallet_id = bw.id
 where 1=1
 and bw.deleted_at is null
 and bw.user_id = %(user_id)s
-group by bw.user_id, bw.id
+group by bw.user_id, bw.id, bw.plaid_id
 union all
 select t.user_id as id,
        t.user_id,
        0 as wallet_id,
        0 as plaid_id,
-       'Total Wallet',
+       'Total Wallet' as `name`,
+       '' as `sub_name`,
        'total_wallet' as `type`,
        sum(if(t.direction = 'income', t.amount, 0)) as income_amount,
        sum(if(t.direction = 'expense', t.amount, 0)) as expense_amount,

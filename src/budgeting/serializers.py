@@ -10,6 +10,21 @@ class CategorySerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'code', 'direction', 'description')
 
 
+class WriteCategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Category
+        fields = ('name', 'direction', 'description', 'group')
+        kwargs = {
+            'group': {
+                'required': True
+            }
+        }
+
+    def validate(self, attrs):
+        attrs['code'] = Category.MANUAL_CODE
+        return attrs
+
+
 class CategoryGroupSerializer(serializers.ModelSerializer):
     class Meta:
         model = CategoryGroup
@@ -31,7 +46,7 @@ class CategoryGroupSerializer(serializers.ModelSerializer):
 class WalletSerializer(serializers.ModelSerializer):
     class Meta:
         model = Wallet
-        fields = ('id', 'name', 'plaid_id')
+        fields = ('id', 'name', 'sub_name', 'plaid_id')
 
 
 class WalletBalanceSerializer(serializers.ModelSerializer):
@@ -44,12 +59,15 @@ class TransactionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Transaction
         fields = ('id', 'transaction_at', 'category', 'category_name', 'category_code',
-                  'direction', 'amount', 'wallet', 'wallet_id', 'note')
+                  'direction', 'amount', 'wallet', 'wallet_id', 'note',
+                  'location', 'location_name')
         read_only_fields = ('wallet', )
 
     wallet_id = serializers.SerializerMethodField()
     category_name = serializers.SerializerMethodField()
     category_code = serializers.SerializerMethodField()
+    location = serializers.SerializerMethodField()
+    location_name = serializers.SerializerMethodField()
 
     def get_wallet_id(self, instance):
         return instance.wallet_id if instance.wallet_id else 0
@@ -69,6 +87,12 @@ class TransactionSerializer(serializers.ModelSerializer):
 
     def get_category_name(self, instance):
         return self.get_category_detail(instance)['name']
+
+    def get_location_name(self, instance):
+        return instance.detail_dict.get('location_name')
+
+    def get_location(self, instance):
+        return instance.detail_dict.get('location')
 
     def validate(self, attrs):
         if 'category' not in attrs:

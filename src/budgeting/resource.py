@@ -12,11 +12,13 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.viewsets import ReadOnlyModelViewSet, ModelViewSet, GenericViewSet
 
+from budgeting.business.wallet import WalletBusiness
 from budgeting.constants import DIRECTION
 from budgeting.models import Category, Transaction, Wallet, CategoryGroup
 from budgeting.queries import TransactionQueries, WalletQueries
 from budgeting.serializers import CategorySerializer, TransactionSerializer, TransactionByDaySerializer, \
-    WalletSerializer, CategoryGroupSerializer, WalletBalanceSerializer, TransactionLinkedBankSerializer
+    WalletSerializer, CategoryGroupSerializer, WalletBalanceSerializer, TransactionLinkedBankSerializer, \
+    WriteCategorySerializer
 from common.business import get_now
 from common.http import StandardPagination
 from constant_core.business import ConstantCoreBusiness
@@ -61,12 +63,20 @@ class CategoryFilter(filters.FilterSet):
     )
 
 
-class CategoryViewSet(ReadOnlyModelViewSet):
+class CategoryViewSet(mixins.CreateModelMixin,
+                      mixins.DestroyModelMixin,
+                      mixins.ListModelMixin,
+                      GenericViewSet):
     permission_classes = (AllowAny, )
     filter_backends = (DjangoFilterBackend, OrderingFilter)
     filterset_class = CategoryFilter
     serializer_class = CategorySerializer
     queryset = Category.objects.filter(deleted_at__isnull=True).order_by('order')
+
+    def get_serializer_class(self):
+        if self.request.method != 'GET':
+            return WriteCategorySerializer
+        return CategorySerializer
 
 
 class WalletViewSet(mixins.CreateModelMixin,
@@ -103,25 +113,8 @@ class WalletViewSet(mixins.CreateModelMixin,
         plaid_id = request.data.get('plaid_id')
         if not plaid_id:
             raise ValidationError('plaid_id is required')
-        plaid = ConstantCoreBusiness.get_plaid_account(plaid_id)
-        if not plaid:
-            raise ValidationError('Invalid plaid_id')
 
-        wallet = Wallet.objects.filter(user_id=request.user.user_id, plaid_id=plaid.id).first()
-        if wallet:
-            if wallet.deleted_at:
-                wallet.deleted_at = None
-                wallet.last_import = date.today()
-            wallet.save()
-        else:
-            last_day_of_prev_month = date.today().replace(day=1) - timedelta(days=1)
-            start_day_of_prev_month = date.today().replace(day=1) - timedelta(days=last_day_of_prev_month.day)
-            wallet = Wallet.objects.create(
-                user_id=request.user.user_id,
-                plaid_id=plaid.id,
-                name=plaid.plaid_name,
-                last_import=start_day_of_prev_month,
-            )
+        wallet = WalletBusiness.add_wallet(request.user, plaid_id)
 
         serializer = WalletSerializer(wallet)
         headers = self.get_success_headers(serializer.data)
