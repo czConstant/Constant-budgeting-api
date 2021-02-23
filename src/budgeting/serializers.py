@@ -43,12 +43,13 @@ class WalletBalanceSerializer(serializers.ModelSerializer):
 class TransactionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Transaction
-        fields = ('id', 'transaction_at', 'category', 'category_detail',
+        fields = ('id', 'transaction_at', 'category', 'category_name', 'category_code',
                   'direction', 'amount', 'wallet', 'wallet_id', 'note')
         read_only_fields = ('wallet', )
 
     wallet_id = serializers.SerializerMethodField()
-    category_detail = serializers.SerializerMethodField()
+    category_name = serializers.SerializerMethodField()
+    category_code = serializers.SerializerMethodField()
 
     def get_wallet_id(self, instance):
         return instance.wallet_id if instance.wallet_id else 0
@@ -62,6 +63,12 @@ class TransactionSerializer(serializers.ModelSerializer):
             'code': category.code if category else Category.DEFAULT_CODE,
             'name': category.name if category else 'Others'
         }
+
+    def get_category_code(self, instance):
+        return self.get_category_detail(instance)['code']
+
+    def get_category_name(self, instance):
+        return self.get_category_detail(instance)['name']
 
     def validate(self, attrs):
         if 'category' not in attrs:
