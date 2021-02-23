@@ -99,8 +99,8 @@ select t.user_id as id,
        sum(if(t.direction = 'income', t.amount, 0)) as income_amount,
        sum(if(t.direction = 'expense', t.amount, 0)) as expense_amount,
        sum(if(t.direction = 'income', t.amount, 0)) - sum(if(t.direction = 'expense', t.amount, 0)) as balance
-from budgeting_transaction t
-join budgeting_wallet bw on t.wallet_id = bw.id
+from budgeting_wallet bw
+left join budgeting_transaction t on t.wallet_id = bw.id
 where 1=1
 and t.wallet_id is not null and bw.deleted_at is null
 and t.user_id = %(user_id)s
