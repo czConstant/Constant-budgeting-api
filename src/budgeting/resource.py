@@ -12,6 +12,7 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.viewsets import ReadOnlyModelViewSet, ModelViewSet, GenericViewSet
 
+from budgeting.business.category import CategoryBusiness
 from budgeting.business.wallet import WalletBusiness
 from budgeting.constants import DIRECTION
 from budgeting.models import Category, Transaction, Wallet, CategoryGroup
@@ -79,6 +80,9 @@ class CategoryViewSet(ModelViewSet):
         if self.request.method != 'GET':
             return WriteCategorySerializer
         return CategorySerializer
+
+    def perform_destroy(self, instance):
+        CategoryBusiness.remove_user_category(instance)
 
 
 class WalletViewSet(mixins.CreateModelMixin,

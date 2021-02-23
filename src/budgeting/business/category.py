@@ -1,9 +1,24 @@
+from django.db import transaction
+
 from budgeting.constants import DIRECTION
-from budgeting.models import CategoryMapping, Category
+from budgeting.models import CategoryMapping, Category, Transaction
+from common.business import get_now
 
 
 class CategoryBusiness:
     category_default = None
+
+    @staticmethod
+    @transaction.atomic
+    def remove_user_category(category):
+        assert category.user_id is not None
+        CategoryBusiness.lazy_load_default_category()
+
+        direction = category.direction
+        default_category = CategoryBusiness.category_default[direction]
+        Transaction.objects.filter(user_id=category.user_id, direction=direction, category=category)\
+            .update(category=default_category, updated_at=get_now())
+        category.delete()
 
     @staticmethod
     def load_category_mapping():

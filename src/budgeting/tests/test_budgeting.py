@@ -68,16 +68,31 @@ class CategoryTests(APITestCase):
         group_2 = CategoryGroupFactory(name='Group 2')
         cat = CategoryFactory(user_id=self.user_id, direction=DIRECTION.income, group=group_1)
         data = {
-            'name': 'Manual Category',
+            'name': 'New Name',
             'direction': DIRECTION.expense,
-            'description': 'Description',
+            'description': 'New Description',
             'group': group_2.id
         }
         response = self.client.put(self.url + '{}/'.format(cat.id), data=data, format='json')
         new_cat = Category.objects.get(id=cat.id)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(new_cat.name, 'New Name')
         self.assertEqual(new_cat.direction, DIRECTION.expense)
         self.assertEqual(new_cat.code, Category.MANUAL_CODE)
+
+    def test_delete(self):
+        group_1 = CategoryGroupFactory(name='Group 1')
+        # Default category
+        CategoryFactory(user_id=self.user_id, direction=DIRECTION.income, code=Category.DEFAULT_CODE)
+
+        cat = CategoryFactory(user_id=self.user_id, direction=DIRECTION.income, group=group_1)
+        tx = TransactionFactory(user_id=self.user_id, transaction_at=datetime(2021, 1, 1),
+                                direction=DIRECTION.income, category=cat)
+
+        response = self.client.delete(self.url + '{}/'.format(cat.id), format='json')
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        new_tx = Transaction.objects.get(id=tx.id)
+        self.assertEqual(new_tx.category.code, Category.DEFAULT_CODE)
 
 
 class WalletTests(APITestCase):

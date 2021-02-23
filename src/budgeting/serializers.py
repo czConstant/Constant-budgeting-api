@@ -29,7 +29,7 @@ class WriteCategorySerializer(serializers.ModelSerializer):
 class CategoryGroupSerializer(serializers.ModelSerializer):
     class Meta:
         model = CategoryGroup
-        fields = ('name', 'code', 'categories')
+        fields = ('id', 'name', 'code', 'categories')
 
     categories = serializers.SerializerMethodField()
 
