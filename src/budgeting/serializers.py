@@ -1,5 +1,6 @@
 from rest_framework import serializers
 
+from budgeting.business.category import CategoryBusiness
 from budgeting.models import Category, Transaction, TransactionByDay, Wallet, CategoryGroup, WalletBalance
 
 
@@ -42,14 +43,32 @@ class WalletBalanceSerializer(serializers.ModelSerializer):
 class TransactionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Transaction
-        fields = ('id', 'transaction_at', 'category',
+        fields = ('id', 'transaction_at', 'category', 'category_detail',
                   'direction', 'amount', 'wallet', 'wallet_id', 'note')
         read_only_fields = ('wallet', )
 
     wallet_id = serializers.SerializerMethodField()
+    category_detail = serializers.SerializerMethodField()
 
     def get_wallet_id(self, instance):
         return instance.wallet_id if instance.wallet_id else 0
+
+    def get_category_detail(self, instance):
+        category = instance.category
+        if not category:
+            category = CategoryBusiness.default_category(instance.direction)
+
+        return {
+            'code': category.code if category else Category.DEFAULT_CODE,
+            'name': category.name if category else 'Others'
+        }
+
+    def validate(self, attrs):
+        if 'category' not in attrs:
+            cat = Category.objects.filter(code='others', direction=attrs['direction']).first()
+            attrs['category'] = cat
+
+        return attrs
 
 
 class TransactionLinkedBankSerializer(TransactionSerializer):

@@ -7,7 +7,7 @@ from rest_framework.test import APITestCase
 
 from budgeting.constants import DIRECTION
 from budgeting.factories import CategoryFactory, TransactionFactory, WalletFactory, CategoryGroupFactory
-from budgeting.models import Transaction, Wallet
+from budgeting.models import Transaction, Wallet, Category
 from common.business import get_now
 from common.test_mocks import CoreMock
 from common.test_utils import AuthenticationUtils
@@ -125,13 +125,15 @@ class WalletTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.json()
 
-        self.assertEqual(Decimal(data[1]['income_amount']), Decimal(80))
-        self.assertEqual(Decimal(data[1]['expense_amount']), Decimal(30))
-        self.assertEqual(Decimal(data[1]['balance']), Decimal(50))
-
-        self.assertEqual(Decimal(data[0]['income_amount']), Decimal(60))
-        self.assertEqual(Decimal(data[0]['expense_amount']), Decimal(30))
-        self.assertEqual(Decimal(data[0]['balance']), Decimal(30))
+        for item in data:
+            if item['wallet_id'] == wallet.id:
+                self.assertEqual(Decimal(item['income_amount']), Decimal(80))
+                self.assertEqual(Decimal(item['expense_amount']), Decimal(30))
+                self.assertEqual(Decimal(item['balance']), Decimal(50))
+            elif item['wallet_id'] == 0:
+                self.assertEqual(Decimal(item['income_amount']), Decimal(60))
+                self.assertEqual(Decimal(item['expense_amount']), Decimal(30))
+                self.assertEqual(Decimal(item['balance']), Decimal(30))
 
 
 class TransactionTests(APITestCase):
@@ -161,6 +163,17 @@ class TransactionTests(APITestCase):
         }
         response = self.client.post(self.url, data=data, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_add_default(self):
+        cat = CategoryFactory(code='others', direction=DIRECTION.income)
+        data = {
+            'amount': '10.00',
+            'direction': DIRECTION.income,
+        }
+        response = self.client.post(self.url, data=data, format='json')
+        obj = Transaction.objects.get(id=response.json()['id'])
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(obj.category_id, cat.id)
 
     def test_add_transaction_at(self):
         cat = CategoryFactory()
@@ -242,6 +255,19 @@ class TransactionFilterTests(APITestCase):
         response = self.client.get(self.url + '?wallet=0', format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.json()['results']), 5)
+
+    def test_filter_cat(self):
+        cat = CategoryFactory(code='cat1', direction=DIRECTION.expense)
+        cat_default = CategoryFactory(code=Category.DEFAULT_CODE, direction=DIRECTION.income)
+        TransactionFactory.create_batch(5, user_id=1, category=cat, direction=DIRECTION.expense)
+        TransactionFactory.create_batch(5, user_id=1, category=cat_default, direction=DIRECTION.income)
+        TransactionFactory.create_batch(5, user_id=1, category=None, direction=DIRECTION.income)
+        response = self.client.get(self.url + '?category=' + str(cat.id), format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.json()['results']), 5)
+        response = self.client.get(self.url + '?category=' + str(cat_default.id), format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.json()['results']), 10)
 
     def test_by_month_filter(self):
         TransactionFactory.create_batch(5, user_id=1, transaction_at=datetime(2021, 2, 20))

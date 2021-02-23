@@ -5,8 +5,9 @@ from decimal import Decimal
 
 from django.core.serializers.json import DjangoJSONEncoder
 
+from budgeting.business.category import CategoryBusiness
 from budgeting.constants import DIRECTION
-from budgeting.models import Transaction, Wallet, Category, CategoryMapping
+from budgeting.models import Transaction, Wallet, Category
 from common.business import get_now
 from constant_core.business import ConstantCoreBusiness
 from integration_3rdparty.plaid import PlaidManagement
@@ -21,15 +22,8 @@ class TransactionBusiness:
         plaid_account = ConstantCoreBusiness.get_plaid_account(wallet.plaid_id)
         transactions = PlaidManagement.get_transaction(plaid_account.access_token, from_date, to_date)
 
-        default_category = 'others'
-        cache_category_mapping = {
-            DIRECTION.income: {
-                default_category: Category.objects.get(code=default_category, direction=DIRECTION.income)
-            },
-            DIRECTION.expense: {
-                default_category: Category.objects.get(code=default_category, direction=DIRECTION.expense)
-            }
-        }
+        default_category = Category.DEFAULT_CODE
+        cache_category_mapping = CategoryBusiness.load_category_mapping()
 
         for transaction in transactions:
             try:
@@ -43,13 +37,8 @@ class TransactionBusiness:
                 if cats:
                     cats.reverse()
                     for cat in cats:
-                        picked_cat_txt = cat
-                        if picked_cat_txt not in cache_category_mapping[direction]:
-                            obj = CategoryMapping.objects.filter(name=picked_cat_txt).first()
-                            if obj:
-                                cache_category_mapping[direction][picked_cat_txt] = obj.category
-                        if picked_cat_txt in cache_category_mapping[direction]:
-                            picked_cat = cache_category_mapping[direction][picked_cat_txt]
+                        if cat in cache_category_mapping[direction]:
+                            picked_cat = cache_category_mapping[direction][cat]
                             break
                     else:
                         picked_cat = cache_category_mapping[direction][default_category]

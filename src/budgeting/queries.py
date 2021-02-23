@@ -91,9 +91,9 @@ class WalletQueries:
         txt = '''
 select *
 from(
-select t.user_id as id,
-       t.user_id,
-       t.wallet_id,
+select bw.user_id as id,
+       bw.user_id,
+       bw.id as wallet_id,
        bw.name,
        'linked_bank' as `type`,
        sum(if(t.direction = 'income', t.amount, 0)) as income_amount,
@@ -102,9 +102,9 @@ select t.user_id as id,
 from budgeting_wallet bw
 left join budgeting_transaction t on t.wallet_id = bw.id
 where 1=1
-and t.wallet_id is not null and bw.deleted_at is null
-and t.user_id = %(user_id)s
-group by t.user_id, t.wallet_id
+and bw.deleted_at is null
+and bw.user_id = %(user_id)s
+group by bw.user_id, bw.id
 union all
 select t.user_id as id,
        t.user_id,

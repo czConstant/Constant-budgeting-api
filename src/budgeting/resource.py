@@ -1,5 +1,6 @@
 from datetime import date, timedelta
 
+from django.db.models import Q
 from django_filters import rest_framework as filters
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import mixins, status
@@ -171,6 +172,14 @@ class TransactionViewSet(ModelViewSet):
                 qs = qs.filter(wallet__isnull=True)
             else:
                 qs = qs.filter(wallet_id=wallet_id)
+        cat_id = self.request.query_params.get('category')
+        if cat_id is not None:
+            cat = Category.objects.filter(id=cat_id).first()
+            if cat:
+                if cat.code == Category.DEFAULT_CODE:
+                    qs = qs.filter(Q(category=cat) | Q(category__isnull=True), direction=cat.direction)
+                else:
+                    qs = qs.filter(category=cat)
 
         qs = qs.order_by('-created_at')
 

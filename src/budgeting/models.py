@@ -212,6 +212,8 @@ class Category(TimestampedModel):
     deleted_at = models.DateTimeField(null=True)
     group = models.ForeignKey(CategoryGroup, related_name='group_categories', null=True, on_delete=models.SET_NULL)
 
+    DEFAULT_CODE = 'others'
+
 
 class CategoryMapping(TimestampedModel):
     name = models.CharField(max_length=255)
