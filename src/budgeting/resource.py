@@ -108,8 +108,9 @@ class WalletViewSet(mixins.CreateModelMixin,
 
         wallet = Wallet.objects.filter(user_id=request.user.user_id, plaid_id=plaid.id).first()
         if wallet:
-            wallet.deleted_at = None
-            wallet.last_import = date.today()
+            if wallet.deleted_at:
+                wallet.deleted_at = None
+                wallet.last_import = date.today()
             wallet.save()
         else:
             last_day_of_prev_month = date.today().replace(day=1) - timedelta(days=1)
