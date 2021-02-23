@@ -264,6 +264,7 @@ class WalletBalance(models.Model):
 
     user_id = models.IntegerField()
     wallet_id = models.IntegerField()
+    plaid_id = models.IntegerField()
     name = models.CharField(max_length=255)
     type = models.CharField(max_length=255)
     income_amount = models.DecimalField(max_digits=18, decimal_places=2)

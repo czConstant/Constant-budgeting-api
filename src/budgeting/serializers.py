@@ -31,7 +31,7 @@ class CategoryGroupSerializer(serializers.ModelSerializer):
 class WalletSerializer(serializers.ModelSerializer):
     class Meta:
         model = Wallet
-        fields = ('id', 'name')
+        fields = ('id', 'name', 'plaid_id')
 
 
 class WalletBalanceSerializer(serializers.ModelSerializer):
