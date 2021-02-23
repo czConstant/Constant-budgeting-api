@@ -205,7 +205,7 @@ class CategoryGroup(TimestampedModel):
 
 class Category(TimestampedModel):
     name = models.CharField(max_length=255)
-    description = models.CharField(max_length=255)
+    description = models.CharField(max_length=255, null=True, blank=True)
     code = models.CharField(max_length=50)
     direction = models.CharField(max_length=50, choices=DIRECTION, default=DIRECTION.income)
     order = models.IntegerField(default=0)
