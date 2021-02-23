@@ -15,6 +15,9 @@ from common.test_utils import AuthenticationUtils
 
 class CategoryGroupTests(APITestCase):
     def setUp(self):
+        self.auth_utils = AuthenticationUtils(self.client)
+        self.user_id = self.auth_utils.user_login()
+
         group_1 = CategoryGroupFactory(name='Group 1')
         group_2 = CategoryGroupFactory(name='Group 2')
         CategoryFactory.create_batch(5, group=group_1, direction=DIRECTION.income)
@@ -34,6 +37,9 @@ class CategoryGroupTests(APITestCase):
 
 class CategoryTests(APITestCase):
     def setUp(self):
+        self.auth_utils = AuthenticationUtils(self.client)
+        self.user_id = self.auth_utils.user_login()
+
         CategoryFactory.create_batch(10)
         self.url = reverse('budget:category-list')
 
@@ -41,6 +47,37 @@ class CategoryTests(APITestCase):
         response = self.client.get(self.url, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.json()), 10)
+
+    def test_add(self):
+        group_1 = CategoryGroupFactory(name='Group 1')
+        data = {
+            'name': 'Manual Category',
+            'direction': DIRECTION.income,
+            'description': 'Description',
+            'group': group_1.id
+        }
+        response = self.client.post(self.url, data=data, format='json')
+        resp = response.json()
+        cat = Category.objects.get(id=resp['id'])
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(cat.user_id, self.user_id)
+        self.assertEqual(cat.code, Category.MANUAL_CODE)
+
+    def test_update(self):
+        group_1 = CategoryGroupFactory(name='Group 1')
+        group_2 = CategoryGroupFactory(name='Group 2')
+        cat = CategoryFactory(user_id=self.user_id, direction=DIRECTION.income, group=group_1)
+        data = {
+            'name': 'Manual Category',
+            'direction': DIRECTION.expense,
+            'description': 'Description',
+            'group': group_2.id
+        }
+        response = self.client.put(self.url + '{}/'.format(cat.id), data=data, format='json')
+        new_cat = Category.objects.get(id=cat.id)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(new_cat.direction, DIRECTION.expense)
+        self.assertEqual(new_cat.code, Category.MANUAL_CODE)
 
 
 class WalletTests(APITestCase):
@@ -248,11 +285,11 @@ class TransactionFilterTests(APITestCase):
         wallet = WalletFactory(user_id=self.user_id)
         TransactionFactory.create_batch(5, user_id=1, wallet=wallet)
         TransactionFactory.create_batch(5, user_id=1)
-        response = self.client.get(self.url + '?wallet=' + str(wallet.id), format='json')
+        response = self.client.get(self.url + '?wallet_id=' + str(wallet.id), format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.json()['results']), 5)
 
-        response = self.client.get(self.url + '?wallet=0', format='json')
+        response = self.client.get(self.url + '?wallet_id=0', format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.json()['results']), 5)
 
@@ -262,10 +299,10 @@ class TransactionFilterTests(APITestCase):
         TransactionFactory.create_batch(5, user_id=1, category=cat, direction=DIRECTION.expense)
         TransactionFactory.create_batch(5, user_id=1, category=cat_default, direction=DIRECTION.income)
         TransactionFactory.create_batch(5, user_id=1, category=None, direction=DIRECTION.income)
-        response = self.client.get(self.url + '?category=' + str(cat.id), format='json')
+        response = self.client.get(self.url + '?category_id=' + str(cat.id), format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.json()['results']), 5)
-        response = self.client.get(self.url + '?category=' + str(cat_default.id), format='json')
+        response = self.client.get(self.url + '?category_id=' + str(cat_default.id), format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.json()['results']), 10)
 

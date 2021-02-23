@@ -7,13 +7,13 @@ from budgeting.models import Category, Transaction, TransactionByDay, Wallet, Ca
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
-        fields = ('id', 'name', 'code', 'direction', 'description')
+        fields = ('id', 'name', 'code', 'direction', 'description', 'user_id')
 
 
 class WriteCategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
-        fields = ('name', 'direction', 'description', 'group')
+        fields = ('id', 'name', 'direction', 'description', 'group')
         kwargs = {
             'group': {
                 'required': True
@@ -21,6 +21,7 @@ class WriteCategorySerializer(serializers.ModelSerializer):
         }
 
     def validate(self, attrs):
+        attrs['user_id'] = self.context['request'].user.user_id
         attrs['code'] = Category.MANUAL_CODE
         return attrs
 

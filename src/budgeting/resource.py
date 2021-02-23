@@ -25,7 +25,7 @@ from constant_core.business import ConstantCoreBusiness
 
 
 class CategoryGroupViewSet(ReadOnlyModelViewSet):
-    permission_classes = (AllowAny,)
+    permission_classes = (IsAuthenticated,)
     serializer_class = CategoryGroupSerializer
     queryset = CategoryGroup.objects.none()
 
@@ -63,15 +63,17 @@ class CategoryFilter(filters.FilterSet):
     )
 
 
-class CategoryViewSet(mixins.CreateModelMixin,
-                      mixins.DestroyModelMixin,
-                      mixins.ListModelMixin,
-                      GenericViewSet):
-    permission_classes = (AllowAny, )
+class CategoryViewSet(ModelViewSet):
+    permission_classes = (IsAuthenticated, )
     filter_backends = (DjangoFilterBackend, OrderingFilter)
     filterset_class = CategoryFilter
     serializer_class = CategorySerializer
     queryset = Category.objects.filter(deleted_at__isnull=True).order_by('order')
+
+    def check_object_permissions(self, request, obj):
+        super(CategoryViewSet, self).check_object_permissions(request, obj)
+        if (not obj.user_id) or (obj.user_id and request.user.user_id != obj.user_id):
+            self.permission_denied(request)
 
     def get_serializer_class(self):
         if self.request.method != 'GET':
@@ -159,13 +161,13 @@ class TransactionViewSet(ModelViewSet):
     def get_queryset(self):
         qs = Transaction.objects.filter(user_id=self.request.user.user_id,
                                         wallet__deleted_at__isnull=True)
-        wallet_id = self.request.query_params.get('wallet')
+        wallet_id = self.request.query_params.get('wallet_id')
         if wallet_id is not None:
             if wallet_id == '0':
                 qs = qs.filter(wallet__isnull=True)
             else:
                 qs = qs.filter(wallet_id=wallet_id)
-        cat_id = self.request.query_params.get('category')
+        cat_id = self.request.query_params.get('category_id')
         if cat_id is not None:
             cat = Category.objects.filter(id=cat_id).first()
             if cat:
