@@ -227,8 +227,23 @@ class TransactionViewSet(ModelViewSet):
         month = request.query_params.get('month')
         wallet_id = request.query_params.get('wallet')
         if not month:
-            raise ValidationError('month is required as format YY-MMMM')
+            raise ValidationError('month is required as format YYYY-MM')
 
-        data = TransactionQueries.get_transaction_month_summary(request.user.user_id, month, wallet_id=wallet_id)
+        data = TransactionQueries.get_transaction_summary(request.user.user_id, 'month', month, wallet_id=wallet_id)
+
+        return Response(data)
+
+    @action(detail=False, methods=['get'], url_path='summary')
+    def summary(self, request):
+        # Format: 2021-02 / 2021
+        dt = request.query_params.get('range')
+        wallet_id = request.query_params.get('wallet')
+        t = request.query_params.get('type', 'month')
+        if t not in ('year', 'month'):
+            raise ValidationError('Invalid type. Possible values: year|month')
+        if not dt:
+            raise ValidationError('range is required as format YYYY|YYYY-MM')
+
+        data = TransactionQueries.get_transaction_summary(request.user.user_id, t, dt, wallet_id=wallet_id)
 
         return Response(data)

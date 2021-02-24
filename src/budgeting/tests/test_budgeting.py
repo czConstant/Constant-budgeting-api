@@ -391,8 +391,8 @@ class TransactionFilterTests(APITestCase):
 
         url = reverse('budget:transaction-month-summary')
         response = self.client.get(url + '?month=2021-02' + '&wallet=' + str(wallet.id), format='json')
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.json()
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(Decimal(data['income_amount']), Decimal(30))
         self.assertEqual(Decimal(data['expense_amount']), Decimal(10))
         self.assertEqual(Decimal(data['current_balance']), Decimal(20))
@@ -407,3 +407,43 @@ class TransactionFilterTests(APITestCase):
         self.assertEqual(Decimal(data['current_balance']), Decimal(20))
         self.assertEqual(Decimal(data['previous_balance']), Decimal(10))
         self.assertEqual(Decimal(data['balance']), Decimal(30))
+
+    def test_summary_filter_type_month(self):
+        # +50
+        TransactionFactory.create_batch(5, user_id=1, transaction_at=datetime(2021, 1, 1), direction=DIRECTION.income)
+        # -20
+        TransactionFactory.create_batch(2, user_id=1, transaction_at=datetime(2021, 1, 1), direction=DIRECTION.expense)
+        # +30
+        TransactionFactory.create_batch(3, user_id=1, transaction_at=datetime(2021, 2, 1), direction=DIRECTION.income)
+        # -10
+        TransactionFactory.create_batch(1, user_id=1, transaction_at=datetime(2021, 2, 1), direction=DIRECTION.expense)
+
+        url = reverse('budget:transaction-summary')
+        response = self.client.get(url + '?range=2021-02&type=month', format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.json()
+        self.assertEqual(Decimal(data['income_amount']), Decimal(30))
+        self.assertEqual(Decimal(data['expense_amount']), Decimal(10))
+        self.assertEqual(Decimal(data['current_balance']), Decimal(20))
+        self.assertEqual(Decimal(data['previous_balance']), Decimal(30))
+        self.assertEqual(Decimal(data['balance']), Decimal(50))
+
+    def test_summary_filter_type_year(self):
+        # +50
+        TransactionFactory.create_batch(5, user_id=1, transaction_at=datetime(2021, 1, 1), direction=DIRECTION.income)
+        # -20
+        TransactionFactory.create_batch(2, user_id=1, transaction_at=datetime(2021, 1, 1), direction=DIRECTION.expense)
+        # +30
+        TransactionFactory.create_batch(3, user_id=1, transaction_at=datetime(2021, 2, 1), direction=DIRECTION.income)
+        # -10
+        TransactionFactory.create_batch(1, user_id=1, transaction_at=datetime(2021, 2, 1), direction=DIRECTION.expense)
+
+        url = reverse('budget:transaction-summary')
+        response = self.client.get(url + '?range=2021&type=year', format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.json()
+        self.assertEqual(Decimal(data['income_amount']), Decimal(80))
+        self.assertEqual(Decimal(data['expense_amount']), Decimal(30))
+        self.assertEqual(Decimal(data['current_balance']), Decimal(50))
+        self.assertEqual(Decimal(data['previous_balance']), Decimal(0))
+        self.assertEqual(Decimal(data['balance']), Decimal(50))
