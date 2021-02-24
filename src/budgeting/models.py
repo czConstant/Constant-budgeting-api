@@ -271,8 +271,6 @@ class TransactionByDay(models.Model):
 class TransactionByCategory(models.Model):
     class Meta:
         managed = False
-    user_id = models.IntegerField()
-    direction = models.CharField(max_length=50)
     amount = models.DecimalField(max_digits=18, decimal_places=2)
     category_id = models.IntegerField()
     category_code = models.CharField(max_length=255)

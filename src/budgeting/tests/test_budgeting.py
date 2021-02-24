@@ -447,3 +447,39 @@ class TransactionFilterTests(APITestCase):
         self.assertEqual(Decimal(data['current_balance']), Decimal(50))
         self.assertEqual(Decimal(data['previous_balance']), Decimal(0))
         self.assertEqual(Decimal(data['balance']), Decimal(50))
+
+    def test_summary_by_category(self):
+        cat1 = CategoryFactory(code='1')
+        cat2 = CategoryFactory(code='2')
+        cat3 = CategoryFactory(code='3')
+        # +50
+        TransactionFactory.create_batch(5, user_id=1, transaction_at=datetime(2021, 1, 1),
+                                        direction=DIRECTION.income, category=cat1)
+        # -20
+        TransactionFactory.create_batch(2, user_id=1, transaction_at=datetime(2021, 1, 1),
+                                        direction=DIRECTION.expense, category=cat2)
+        # +30
+        TransactionFactory.create_batch(3, user_id=1, transaction_at=datetime(2021, 2, 1),
+                                        direction=DIRECTION.income, category=cat3)
+        # -10
+        TransactionFactory.create_batch(1, user_id=1, transaction_at=datetime(2021, 2, 1),
+                                        direction=DIRECTION.expense, category=cat1)
+
+        url = reverse('budget:transaction-summary-by-category')
+        response = self.client.get(url + '?range=2021&type=year&wallet_id=0&direction=income', format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.json()
+        self.assertEqual(len(data), 2)
+        self.assertEqual(Decimal(data[0]['amount']), Decimal(50))
+        self.assertEqual(data[0]['category_code'], '1')
+        self.assertEqual(Decimal(data[1]['amount']), Decimal(30))
+        self.assertEqual(data[1]['category_code'], '3')
+
+        response = self.client.get(url + '?range=2021&type=year&wallet_id=0&direction=expense', format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.json()
+        self.assertEqual(len(data), 2)
+        self.assertEqual(Decimal(data[0]['amount']), Decimal(20))
+        self.assertEqual(data[0]['category_code'], '2')
+        self.assertEqual(Decimal(data[1]['amount']), Decimal(10))
+        self.assertEqual(data[1]['category_code'], '1')

@@ -1,7 +1,8 @@
 from rest_framework import serializers
 
 from budgeting.business.category import CategoryBusiness
-from budgeting.models import Category, Transaction, TransactionByDay, Wallet, CategoryGroup, WalletBalance
+from budgeting.models import Category, Transaction, TransactionByDay, Wallet, CategoryGroup, WalletBalance, \
+    TransactionByCategory
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -115,3 +116,9 @@ class TransactionByDaySerializer(serializers.ModelSerializer):
     class Meta:
         model = TransactionByDay
         fields = ('income_amount', 'expense_amount', 'transaction_at')
+
+
+class TransactionByCategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TransactionByCategory
+        fields = ('category_id', 'category_code', 'category_name', 'amount')

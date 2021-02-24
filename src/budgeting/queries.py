@@ -1,6 +1,6 @@
 from django.db import connection
 
-from budgeting.models import TransactionByDay, WalletBalance
+from budgeting.models import TransactionByDay, WalletBalance, TransactionByCategory
 
 
 class TransactionQueries:
@@ -93,19 +93,40 @@ group by t.user_id
         return data
 
     @staticmethod
-    def get_transaction_month_report(user_id: int, month: str, direction: str, wallet_id: int = None):
+    def get_transaction_summary_by_category(user_id: int, t: str, direction: str, month: str,
+                                            wallet_id: int = None):
         wallet_cond = ''
         if wallet_id:
             if wallet_id == '0':
                 wallet_cond = 'and t.wallet_id is null'
             else:
                 wallet_cond = 'and t.wallet_id = %(wallet_id)s'
+        dt_cond = ''
+        if t == 'month':
+            dt_cond = "and DATE_FORMAT(t.transaction_at, '%%Y-%%m') = %(month)s"
+        elif t == 'year':
+            dt_cond = "and DATE_FORMAT(t.transaction_at, '%%Y') = %(month)s"
 
         txt = '''
-'''.format(wallet_cond=wallet_cond)
+select bc.id as id, bc.id as category_id, bc.code as category_code, bc.name as category_name, 
+    sum(t.amount) as amount
+from budgeting_transaction t
+join budgeting_category bc on t.category_id = bc.id
+where 1=1
+and t.user_id = %(user_id)s
+and t.direction = %(direction)s
+{dt_cond}
+{wallet_cond}
+group by bc.id, bc.code, bc.name
+order by sum(t.amount) desc
+'''.format(wallet_cond=wallet_cond, dt_cond=dt_cond)
 
-        with connection.cursor() as cursor:
-            cursor.execute(txt, {'month': month, 'user_id': user_id, 'wallet_id': wallet_id})
+        qs = TransactionByCategory.objects.raw(txt, {
+            'month': month, 'user_id': user_id, 'direction': direction, 'wallet_id': wallet_id
+        })
+
+        return qs
+
 
 class WalletQueries:
     @staticmethod

@@ -19,7 +19,7 @@ from budgeting.models import Category, Transaction, Wallet, CategoryGroup
 from budgeting.queries import TransactionQueries, WalletQueries
 from budgeting.serializers import CategorySerializer, TransactionSerializer, TransactionByDaySerializer, \
     WalletSerializer, CategoryGroupSerializer, WalletBalanceSerializer, TransactionLinkedBankSerializer, \
-    WriteCategorySerializer
+    WriteCategorySerializer, TransactionByCategorySerializer
 from common.business import get_now
 from common.http import StandardPagination
 from constant_core.business import ConstantCoreBusiness
@@ -245,5 +245,25 @@ class TransactionViewSet(ModelViewSet):
             raise ValidationError('range is required as format YYYY|YYYY-MM')
 
         data = TransactionQueries.get_transaction_summary(request.user.user_id, t, dt, wallet_id=wallet_id)
+
+        return Response(data)
+
+    @action(detail=False, methods=['get'], url_path='summary-by-category')
+    def summary_by_category(self, request):
+        # Format: 2021-02 / 2021
+        dt = request.query_params.get('range')
+        wallet_id = request.query_params.get('wallet')
+        t = request.query_params.get('type', 'month')
+        direction = request.query_params.get('direction')
+        if t not in ('year', 'month'):
+            raise ValidationError('Invalid type. Possible values: year|month')
+        if not dt:
+            raise ValidationError('range is required as format YYYY|YYYY-MM')
+        if direction not in (DIRECTION.income, DIRECTION.expense):
+            raise ValidationError('Invalid direction. Possible value: income|expense')
+
+        qs = TransactionQueries.get_transaction_summary_by_category(
+            request.user.user_id, t, direction, dt, wallet_id=wallet_id)
+        data = TransactionByCategorySerializer(qs, many=True).data
 
         return Response(data)
