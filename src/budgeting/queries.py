@@ -1,6 +1,9 @@
+from decimal import Decimal
+
 from django.db import connection
 
 from budgeting.models import TransactionByDay, WalletBalance, TransactionByCategory
+from common.business import build_month_table
 
 
 class TransactionQueries:
@@ -126,6 +129,49 @@ order by sum(t.amount) desc
         })
 
         return qs
+
+    @staticmethod
+    def get_transaction_summary_category_by_month(user_id: int, category_id: int,
+                                                  from_month: str, to_month: str,
+                                                  wallet_id: int = None):
+        month_table = build_month_table(from_month, to_month)
+        wallet_cond = ''
+        if wallet_id:
+            if wallet_id == '0':
+                wallet_cond = 'and t.wallet_id is null'
+            else:
+                wallet_cond = 'and t.wallet_id = %(wallet_id)s'
+
+        txt = '''
+select dt.mth,
+    sum(coalesce(t.amount, 0)) as amount
+from (
+{month_table}
+    ) as dt
+left join budgeting_transaction t on dt.mth = DATE_FORMAT(t.transaction_at, '%%Y-%%m') 
+                                         and t.user_id = %(user_id)s
+                                         and t.category_id = %(category_id)s
+                                         {wallet_cond}
+where 1=1
+group by dt.mth
+order by dt.mth;
+'''.format(wallet_cond=wallet_cond, month_table=month_table)
+
+        result = []
+        with connection.cursor() as cursor:
+            cursor.execute(txt, {
+                'user_id': user_id,
+                'wallet_id': wallet_id,
+                'category_id': category_id
+            })
+            rows = cursor.fetchall()
+            for row in rows:
+                result.append({
+                    'month': row[0],
+                    'amount': Decimal(row[1])
+                })
+
+        return result
 
 
 class WalletQueries:

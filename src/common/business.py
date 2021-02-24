@@ -1,7 +1,10 @@
 import random
 import string
+from collections import OrderedDict
+from datetime import datetime, timedelta
 from decimal import Decimal, ROUND_HALF_UP
 
+from dateutil.relativedelta import relativedelta
 from django.utils import timezone
 
 
@@ -31,3 +34,15 @@ def round_currency(amount: Decimal) -> Decimal:
 
 def round_crypto(amount: Decimal, decimal_place=6) -> Decimal:
     return amount.quantize(Decimal('.{}1'.format('0' * (decimal_place - 1))), ROUND_HALF_UP)
+
+
+def build_month_table(from_month: str, to_month: str):
+    from_date = datetime.strptime(from_month + '-01', '%Y-%m-%d')
+    to_date = datetime.strptime(to_month + '-01', '%Y-%m-%d')
+    cur_date = from_date
+    dt_strs = []
+    while cur_date <= to_date:
+        dt_strs.append("select '{}' as mth ".format(cur_date.strftime('%Y-%m')))
+        cur_date += relativedelta(months=1)
+    dt_str = 'union all '.join(dt_strs)
+    return dt_str

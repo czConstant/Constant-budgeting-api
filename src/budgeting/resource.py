@@ -144,7 +144,7 @@ class TransactionFilter(filters.FilterSet):
     class Meta:
         model = Transaction
         fields = {
-            'amount': ['exact', 'gt', 'lt', 'gte', 'lte']
+            'amount': ['exact', 'gt', 'lt', 'gte', 'lte'],
         }
 
     direction = filters.MultipleChoiceFilter(
@@ -265,5 +265,22 @@ class TransactionViewSet(ModelViewSet):
         qs = TransactionQueries.get_transaction_summary_by_category(
             request.user.user_id, t, direction, dt, wallet_id=wallet_id)
         data = TransactionByCategorySerializer(qs, many=True).data
+
+        return Response(data)
+
+    @action(detail=False, methods=['get'], url_path='summary-category-by-month')
+    def summary_category_by_month(self, request):
+        # Format: 2021-02
+        from_month = request.query_params.get('from_month')
+        to_month = request.query_params.get('to_month')
+        wallet_id = request.query_params.get('wallet')
+        category_id = request.query_params.get('category_id')
+        if not from_month or not to_month:
+            raise ValidationError('from_month/to_month are required as format YYYY-MM')
+        if not category_id:
+            raise ValidationError('category_id is required')
+
+        data = TransactionQueries.get_transaction_summary_category_by_month(
+            request.user.user_id, category_id, from_month, to_month, wallet_id=wallet_id)
 
         return Response(data)
