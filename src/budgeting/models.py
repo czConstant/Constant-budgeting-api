@@ -259,7 +259,7 @@ class Transaction(TimestampedModel):
             return {}
 
 
-class Budget(models.Model):
+class Budget(TimestampedModel):
     user_id = models.IntegerField()
     category = models.ForeignKey(Category,
                                  related_name='category_budgets',

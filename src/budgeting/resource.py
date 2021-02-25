@@ -275,8 +275,6 @@ class TransactionViewSet(ModelViewSet):
         to_month = request.query_params.get('to_month')
         wallet_id = request.query_params.get('wallet')
         category_id = request.query_params.get('category_id')
-        if not from_month or not to_month:
-            raise ValidationError('from_month/to_month are required as format YYYY-MM')
         if not category_id:
             raise ValidationError('category_id is required')
 

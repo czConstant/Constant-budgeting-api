@@ -530,6 +530,34 @@ class TransactionFilterTests(APITestCase):
         self.assertEqual(Decimal(data[2]['amount']), Decimal(30))
         self.assertEqual(data[2]['month'], '2021-02')
 
+    def test_summary_category_by_month_no_time_range(self):
+        cat1 = CategoryFactory(code='1')
+        # +50
+        TransactionFactory.create_batch(5, user_id=1, transaction_at=datetime(2021, 1, 1),
+                                        direction=DIRECTION.income, category=cat1)
+        # -20
+        TransactionFactory.create_batch(2, user_id=1, transaction_at=datetime(2021, 1, 1),
+                                        direction=DIRECTION.expense)
+        # +30
+        TransactionFactory.create_batch(3, user_id=1, transaction_at=datetime(2021, 2, 1),
+                                        direction=DIRECTION.income, category=cat1)
+        # -10
+        TransactionFactory.create_batch(1, user_id=1, transaction_at=datetime(2021, 2, 1),
+                                        direction=DIRECTION.expense)
+
+        url = reverse('budget:transaction-summary-category-by-month')
+        response = self.client.get(url +
+                                   '?wallet_id=0&category_id=' +
+                                   str(cat1.id),
+                                   format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.json()
+        self.assertEqual(len(data), 2)
+        self.assertEqual(Decimal(data[0]['amount']), Decimal(50))
+        self.assertEqual(data[0]['month'], '2021-01')
+        self.assertEqual(Decimal(data[1]['amount']), Decimal(30))
+        self.assertEqual(data[1]['month'], '2021-02')
+
 
 class TransactionNoPagingTests(APITestCase):
     def setUp(self):

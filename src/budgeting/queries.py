@@ -3,7 +3,7 @@ from decimal import Decimal
 from django.db import connection
 
 from budgeting.models import TransactionByDay, WalletBalance, TransactionByCategory
-from common.business import build_month_table
+from common.business import build_month_table, get_now
 
 
 class TransactionQueries:
@@ -132,15 +132,40 @@ order by sum(t.amount) desc
 
     @staticmethod
     def get_transaction_summary_category_by_month(user_id: int, category_id: int,
-                                                  from_month: str, to_month: str,
+                                                  from_month: str = None, to_month: str = None,
                                                   wallet_id: int = None):
-        month_table = build_month_table(from_month, to_month)
         wallet_cond = ''
         if wallet_id:
             if wallet_id == '0':
                 wallet_cond = 'and t.wallet_id is null'
             else:
                 wallet_cond = 'and t.wallet_id = %(wallet_id)s'
+
+        txt_month = '''
+select DATE_FORMAT(min(t.transaction_at), '%%Y-%%m'), DATE_FORMAT(max(t.transaction_at), '%%Y-%%m')
+from budgeting_transaction t
+where 1=1
+and t.user_id = %(user_id)s
+and t.category_id = %(category_id)s
+{wallet_cond}
+group by t.user_id, t.category_id
+'''.format(wallet_cond=wallet_cond)
+        with connection.cursor() as cursor:
+            cursor.execute(txt_month, {
+                'user_id': user_id,
+                'wallet_id': wallet_id,
+                'category_id': category_id
+            })
+            months = cursor.fetchone()
+            if months:
+                if not from_month:
+                    from_month = months[0]
+                if not to_month:
+                    to_month = months[1]
+            else:
+                from_month = to_month = get_now().strftime('%Y-%m')
+
+        month_table = build_month_table(from_month, to_month)
 
         txt = '''
 select dt.mth,
