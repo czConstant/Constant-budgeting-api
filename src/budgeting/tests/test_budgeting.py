@@ -119,7 +119,7 @@ class WalletTests(APITestCase):
         resp = response.json()
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         w = Wallet.objects.get(id=resp['id'])
-        self.assertEqual(w.name, 'Plaid (savings)')
+        self.assertEqual(w.name, 'Plaid')
         self.assertEqual(w.plaid_id, 1)
 
     def test_add_after_delete(self):

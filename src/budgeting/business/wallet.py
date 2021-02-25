@@ -25,8 +25,8 @@ class WalletBusiness:
             wallet = Wallet.objects.create(
                 user_id=user.user_id,
                 plaid_id=plaid.id,
-                name=plaid.plaid_name,
-                sub_name=plaid.institution_name,
+                name=plaid.institution_name,
+                sub_name=plaid.account_subtype,
                 last_import=start_day_of_prev_month,
             )
 

@@ -151,7 +151,7 @@ class TransactionFilter(filters.FilterSet):
         choices=DIRECTION
     )
     from_date = filters.DateFilter(field_name='transaction_at', lookup_expr='gte')
-    to_date = filters.DateFilter(field_name='transaction_at', lookup_expr='lte')
+    to_date = filters.DateFilter(field_name='transaction_at', lookup_expr='lt')
 
 
 class TransactionViewSet(ModelViewSet):
