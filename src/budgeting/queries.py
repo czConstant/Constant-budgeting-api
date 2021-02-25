@@ -2,7 +2,7 @@ from decimal import Decimal
 
 from django.db import connection
 
-from budgeting.models import TransactionByDay, WalletBalance, TransactionByCategory
+from budgeting.models import TransactionByDay, WalletBalance, TransactionByCategory, BudgetDetail
 from common.business import build_month_table, get_now
 
 
@@ -295,6 +295,46 @@ group by r2.id, r2.user_id, r2.wallet_id, r2.plaid_id, r2.name, r2.sub_name, r2.
 
 class BudgetQueries:
     @staticmethod
-    def get_budget_details(user_id: int, wallet_id: int, category_id: int,
-                           is_over: bool = None, is_end: bool = None):
-        return None
+    def get_budget_details(user_id: int, wallet_id: int,
+                           is_end: str = None, is_over: str = None):
+
+        wallet_cond = ''
+        if wallet_id:
+            if wallet_id == '0':
+                wallet_cond = 'and t.wallet_id is null'
+            else:
+                wallet_cond = 'and t.wallet_id = %(wallet_id)s'
+        is_over_cond = ''
+        if is_over is not None:
+            is_over_cond = 'and is_over = {}'.format('1' if str(is_over) == '1' else '0')
+        is_end_cond = ''
+        if is_end is not None:
+            is_end_cond = 'and is_end = {}'.format('1' if str(is_end) == '1' else '0')
+
+        txt = '''
+select *
+from
+(
+select b.id,
+       bc.id as category_id, bc.code as category_code, bc.name as category_name,
+       b.wallet_id, b.amount, coalesce(sum(t.amount), 0) as current_amount,
+       if(now() > b.to_date, 1, 0) as is_end,
+       if(sum(t.amount) > b.amount, 1, 0) as is_over,
+       b.from_date, b.to_date
+from budgeting_budget b
+join budgeting_category bc on b.category_id = bc.id
+left join budgeting_transaction t on t.category_id = b.category_id
+                                         {wallet_cond}
+                                         and (b.from_date <= t.transaction_at and t.transaction_at < DATE_ADD(b.to_date, interval 1 day))
+where b.user_id = %(user_id)s
+group by b.id, bc.id
+) as r
+where 
+1=1
+{is_over_cond}
+{is_end_cond}
+;
+'''.format(wallet_cond=wallet_cond, is_over_cond=is_over_cond, is_end_cond=is_end_cond)
+
+        qs = BudgetDetail.objects.raw(txt, {'user_id': user_id, 'wallet_id': wallet_id})
+        return qs

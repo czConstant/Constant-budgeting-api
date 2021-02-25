@@ -306,15 +306,12 @@ class BudgetViewSet(ModelViewSet):
     def list(self, request, *args, **kwargs):
         user_id = request.user.user_id
         wallet_id = request.query_params.get('wallet_id')
-        category_id = request.query_params.get('category_id')
-        if not category_id:
-            raise ValidationError('category_id is required')
         if not wallet_id:
             raise ValidationError('wallet_id is required')
         is_end = request.query_params.get('is_end')
         is_over = request.query_params.get('is_over')
 
-        qs = BudgetQueries.get_budget_details(user_id, wallet_id, category_id, is_end, is_over)
+        qs = BudgetQueries.get_budget_details(user_id, wallet_id, is_end, is_over)
         serializer = BudgetDetailSerializer(qs, many=True, context=self.get_serializer_context())
         return Response(serializer.data)
 
