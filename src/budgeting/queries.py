@@ -266,3 +266,10 @@ group by r2.id, r2.user_id, r2.wallet_id, r2.plaid_id, r2.name, r2.sub_name, r2.
 
         qs = WalletBalance.objects.raw(txt, {'user_id': user_id})
         return qs
+
+
+class BudgetQueries:
+    @staticmethod
+    def get_budget_details(user_id: int, wallet_id: int, category_id: int,
+                           is_over: bool = None, is_end: bool = None):
+        return None

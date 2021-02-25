@@ -259,6 +259,19 @@ class Transaction(TimestampedModel):
             return {}
 
 
+class Budget(models.Model):
+    user_id = models.IntegerField()
+    category = models.ForeignKey(Category,
+                                 related_name='category_budgets',
+                                 on_delete=models.SET_NULL, null=True)
+    wallet = models.ForeignKey(Wallet,
+                               related_name='wallet_budgets',
+                               on_delete=models.SET_NULL, null=True)
+    amount = models.DecimalField(max_digits=18, decimal_places=2)
+    from_date = models.DateField()
+    to_date = models.DateField()
+
+
 class TransactionByDay(models.Model):
     class Meta:
         managed = False
@@ -290,3 +303,20 @@ class WalletBalance(models.Model):
     income_amount = models.DecimalField(max_digits=18, decimal_places=2)
     expense_amount = models.DecimalField(max_digits=18, decimal_places=2)
     balance = models.DecimalField(max_digits=18, decimal_places=2)
+
+
+class BudgetDetail(models.Model):
+    class Meta:
+        managed = False
+
+    user_id = models.IntegerField()
+    wallet_id = models.IntegerField()
+    category_id = models.IntegerField()
+    category_code = models.CharField(max_length=255)
+    category_name = models.CharField(max_length=255)
+    amount = models.DecimalField(max_digits=18, decimal_places=2)
+    current_amount = models.DecimalField(max_digits=18, decimal_places=2)
+    from_date = models.DateField()
+    to_date = models.DateField()
+    is_end = models.BooleanField()
+    is_over = models.BooleanField()

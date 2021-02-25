@@ -15,11 +15,11 @@ from rest_framework.viewsets import ReadOnlyModelViewSet, ModelViewSet, GenericV
 from budgeting.business.category import CategoryBusiness
 from budgeting.business.wallet import WalletBusiness
 from budgeting.constants import DIRECTION
-from budgeting.models import Category, Transaction, Wallet, CategoryGroup
-from budgeting.queries import TransactionQueries, WalletQueries
+from budgeting.models import Category, Transaction, Wallet, CategoryGroup, Budget
+from budgeting.queries import TransactionQueries, WalletQueries, BudgetQueries
 from budgeting.serializers import CategorySerializer, TransactionSerializer, TransactionByDaySerializer, \
     WalletSerializer, CategoryGroupSerializer, WalletBalanceSerializer, TransactionLinkedBankSerializer, \
-    WriteCategorySerializer, TransactionByCategorySerializer
+    WriteCategorySerializer, TransactionByCategorySerializer, BudgetSerializer, BudgetDetailSerializer
 from common.business import get_now
 from common.http import StandardPagination
 from constant_core.business import ConstantCoreBusiness
@@ -288,3 +288,42 @@ class TransactionViewSet(ModelViewSet):
 
 class TransactionNoPagingViewSet(TransactionViewSet):
     pagination_class = None
+
+
+class BudgetViewSet(ModelViewSet):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = BudgetSerializer
+    queryset = Budget.objects.none()
+
+    def get_queryset(self):
+        qs = Budget.objects.filter(user_id=self.request.user.user_id)
+        qs = qs.order_by('-id')
+        return qs
+
+    def check_object_permissions(self, request, obj):
+        super(BudgetViewSet, self).check_object_permissions(request, obj)
+        if not request.user.user_id == obj.user_id:
+            self.permission_denied(request)
+
+    def list(self, request, *args, **kwargs):
+        user_id = request.user.user_id
+        wallet_id = request.query_params.get('wallet_id')
+        category_id = request.query_params.get('category_id')
+        if not category_id:
+            raise ValidationError('category_id is required')
+        if not wallet_id:
+            raise ValidationError('wallet_id is required')
+        is_end = request.query_params.get('is_end')
+        is_over = request.query_params.get('is_over')
+
+        qs = BudgetQueries.get_budget_details(user_id, wallet_id, category_id, is_end, is_over)
+        serializer = BudgetDetailSerializer(qs, many=True, context=self.get_serializer_context())
+        return Response(serializer.data)
+
+    def get_serializer_class(self):
+        if self.request.method != 'GET':
+            return BudgetSerializer
+        return BudgetDetailSerializer
+
+    def perform_create(self, serializer):
+        serializer.save(user_id=self.request.user.user_id)

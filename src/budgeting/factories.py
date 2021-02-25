@@ -3,6 +3,7 @@ from decimal import Decimal
 import factory
 
 from budgeting.constants import DIRECTION
+from common.business import get_now
 
 
 class CategoryGroupFactory(factory.django.DjangoModelFactory):
@@ -36,3 +37,13 @@ class WalletFactory(factory.django.DjangoModelFactory):
 
     user_id = factory.Sequence(lambda n: n)
     name = 'Wallet'
+
+
+class BudgetFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = 'budgeting.Budget'
+
+    user_id = factory.Sequence(lambda n: n)
+    amount = Decimal(1000)
+    from_date = get_now().today()
+    to_date = get_now().today()
