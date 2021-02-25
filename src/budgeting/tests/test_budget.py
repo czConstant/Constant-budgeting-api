@@ -30,6 +30,19 @@ class BudgetTests(APITestCase):
         response = self.client.post(self.url, data=data, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
+    def test_add_wallet_0(self):
+        cat = CategoryFactory()
+
+        data = {
+            'category': cat.id,
+            'wallet': 0,
+            'amount': '1000',
+            'from_date': '2021-01-02',
+            'to_date': '2021-02-02',
+        }
+        response = self.client.post(self.url, data=data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
     def test_update(self):
         budget = BudgetFactory(user_id=self.user_id)
         wallet = WalletFactory()

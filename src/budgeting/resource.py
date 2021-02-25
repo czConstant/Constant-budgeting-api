@@ -322,3 +322,15 @@ class BudgetViewSet(ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(user_id=self.request.user.user_id)
+
+    def create(self, request, *args, **kwargs):
+        if 'wallet' in request.data:
+            if str(request.data['wallet']) == '0':
+                request.data.pop('wallet')
+        return super(BudgetViewSet, self).create(request, *args, **kwargs)
+
+    def update(self, request, *args, **kwargs):
+        if 'wallet' in request.data:
+            if str(request.data['wallet']) == '0':
+                request.data.pop('wallet')
+        return super(BudgetViewSet, self).update(request, *args, **kwargs)
