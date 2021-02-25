@@ -110,8 +110,8 @@ class WalletViewSet(mixins.CreateModelMixin,
             item['type'] = 'linked_bank'
         result_list.insert(0, {
             'id': 0,
-            'name': 'Total Wallet',
-            'type': 'total_wallet'
+            'name': 'Manual Wallet',
+            'type': 'manual_wallet'
         })
         return Response(result_list)
 
@@ -284,3 +284,7 @@ class TransactionViewSet(ModelViewSet):
             request.user.user_id, category_id, from_month, to_month, wallet_id=wallet_id)
 
         return Response(data)
+
+
+class TransactionNoPagingViewSet(TransactionViewSet):
+    pagination_class = None

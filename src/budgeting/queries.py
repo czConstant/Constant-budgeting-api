@@ -197,21 +197,70 @@ and bw.deleted_at is null
 and bw.user_id = %(user_id)s
 group by bw.user_id, bw.id, bw.plaid_id
 union all
-select t.user_id as id,
-       t.user_id,
-       0 as wallet_id,
-       0 as plaid_id,
-       'Total Wallet' as `name`,
-       '' as `sub_name`,
-       'total_wallet' as `type`,
-       sum(if(t.direction = 'income', t.amount, 0)) as income_amount,
-       sum(if(t.direction = 'expense', t.amount, 0)) as expense_amount,
-       sum(if(t.direction = 'income', t.amount, 0)) - sum(if(t.direction = 'expense', t.amount, 0)) as balance
-from budgeting_transaction t
-where 1=1
-and t.wallet_id is null
-and t.user_id = %(user_id)s
-group by t.user_id
+select r1.id, r1.user_id, r1.wallet_id, r1.plaid_id, r1.name, r1.sub_name, r1.type, 
+       sum(r1.income_amount) as income_amount, sum(r1.expense_amount) as expense_amount, sum(r1.balance) as balance
+from
+(
+    select t.user_id as id,
+           t.user_id,
+           0 as wallet_id,
+           0 as plaid_id,
+           'Manual Wallet' as `name`,
+           '' as `sub_name`,
+           'manual_wallet' as `type`,
+           sum(if(t.direction = 'income', t.amount, 0)) as income_amount,
+           sum(if(t.direction = 'expense', t.amount, 0)) as expense_amount,
+           sum(if(t.direction = 'income', t.amount, 0)) - sum(if(t.direction = 'expense', t.amount, 0)) as balance
+    from budgeting_transaction t
+    where 1=1
+    and t.wallet_id is null
+    and t.user_id = %(user_id)s
+    group by t.user_id
+    union all
+    select %(user_id)s as id,
+           %(user_id)s as user_id,
+           0 as wallet_id,
+           0 as plaid_id,
+           'Manual Wallet' as name,
+           '' as sub_name,
+           'manual_wallet' as type,
+           0 as income_amount,
+           0 as expense_amount,
+           0 as balance
+) as r1
+group by r1.id, r1.user_id, r1.wallet_id, r1.plaid_id, r1.name, r1.sub_name, r1.type
+union all
+select r2.id, r2.user_id, r2.wallet_id, r2.plaid_id, r2.name, r2.sub_name, r2.type, 
+       sum(r2.income_amount) as income_amount, sum(r2.expense_amount) as expense_amount, sum(r2.balance) as balance
+from
+(
+    select t.user_id as id,
+           t.user_id,
+           null as wallet_id,
+           0 as plaid_id,
+           'Total Wallet' as `name`,
+           '' as `sub_name`,
+           'total_wallet' as `type`,
+           sum(if(t.direction = 'income', t.amount, 0)) as income_amount,
+           sum(if(t.direction = 'expense', t.amount, 0)) as expense_amount,
+           sum(if(t.direction = 'income', t.amount, 0)) - sum(if(t.direction = 'expense', t.amount, 0)) as balance
+    from budgeting_transaction t
+    where 1=1
+    and t.user_id = %(user_id)s
+    group by t.user_id
+    union all
+    select %(user_id)s as id,
+           %(user_id)s as user_id,
+           null as wallet_id,
+           0 as plaid_id,
+           'Total Wallet' as name,
+           '' as sub_name,
+           'total_wallet' as type,
+           0 as income_amount,
+           0 as expense_amount,
+           0 as balance
+) as r2
+group by r2.id, r2.user_id, r2.wallet_id, r2.plaid_id, r2.name, r2.sub_name, r2.type
 ) as r order by r.wallet_id;
 '''
 

@@ -176,16 +176,34 @@ class WalletTests(APITestCase):
         response = self.client.get(url, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.json()
-
         for item in data:
-            if item['wallet_id'] == wallet.id:
-                self.assertEqual(Decimal(item['income_amount']), Decimal(80))
-                self.assertEqual(Decimal(item['expense_amount']), Decimal(30))
-                self.assertEqual(Decimal(item['balance']), Decimal(50))
-            elif item['wallet_id'] == 0:
-                self.assertEqual(Decimal(item['income_amount']), Decimal(60))
-                self.assertEqual(Decimal(item['expense_amount']), Decimal(30))
-                self.assertEqual(Decimal(item['balance']), Decimal(30))
+            if item['wallet_id'] is not None:
+                if item['wallet_id'] == wallet.id:
+                    self.assertEqual(Decimal(item['income_amount']), Decimal(80))
+                    self.assertEqual(Decimal(item['expense_amount']), Decimal(30))
+                    self.assertEqual(Decimal(item['balance']), Decimal(50))
+                elif item['wallet_id'] == 0:
+                    self.assertEqual(Decimal(item['income_amount']), Decimal(60))
+                    self.assertEqual(Decimal(item['expense_amount']), Decimal(30))
+                    self.assertEqual(Decimal(item['balance']), Decimal(30))
+
+
+class WalletNoRecordTests(APITestCase):
+    def setUp(self):
+        self.auth_utils = AuthenticationUtils(self.client)
+        self.user_id = self.auth_utils.user_login()
+        self.url = reverse('budget:wallet-list')
+
+        self.core_mock = CoreMock()
+
+    def test_balance_no_record(self):
+        url = reverse('budget:wallet-balance')
+        response = self.client.get(url, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.json()
+        self.assertEqual(len(data), 2)
+        self.assertIsNone(data[0]['wallet_id'])
+        self.assertEqual(data[1]['wallet_id'], 0)
 
 
 class TransactionTests(APITestCase):
@@ -506,9 +524,22 @@ class TransactionFilterTests(APITestCase):
                                    format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.json()
-        print(data)
         self.assertEqual(len(data), 4)
         self.assertEqual(Decimal(data[1]['amount']), Decimal(50))
         self.assertEqual(data[1]['month'], '2021-01')
         self.assertEqual(Decimal(data[2]['amount']), Decimal(30))
         self.assertEqual(data[2]['month'], '2021-02')
+
+
+class TransactionNoPagingTests(APITestCase):
+    def setUp(self):
+        self.auth_utils = AuthenticationUtils(self.client)
+        self.user_id = self.auth_utils.user_login()
+
+        TransactionFactory.create_batch(10, user_id=1)
+        self.url = reverse('budget:no-paging-transaction-list')
+
+    def test_list(self):
+        response = self.client.get(self.url, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.json()), 10)
