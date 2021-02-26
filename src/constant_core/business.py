@@ -78,6 +78,11 @@ class ConstantCoreBusiness(object):
         return PlaidAccounts.objects.filter(id=plaid_id).first()
 
     @staticmethod
+    def get_device_tokens(user_ids=[]):
+        device_tokens = [t for t in User.objects.filter(id__in=user_ids).values_list('device_token', flat=True) if t]
+        return device_tokens
+
+    @staticmethod
     def create_admin_log_action(request):
         obj = AdminLogActions.objects.create(
             user_id=request.user.user_id,
