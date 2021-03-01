@@ -7,7 +7,7 @@ from django.db import models
 from django.utils import timezone
 from django.utils.functional import cached_property
 
-from budgeting.constants import DIRECTION
+from budgeting.constants import DIRECTION, TASK_NOTE
 from constant_core.business import ConstantCoreBusiness
 from constant_core.models import User as CoreUser
 
@@ -270,6 +270,14 @@ class Budget(TimestampedModel):
     amount = models.DecimalField(max_digits=18, decimal_places=2)
     from_date = models.DateField()
     to_date = models.DateField()
+
+
+class TaskNote(TimestampedModel):
+    user_id = models.IntegerField()
+    task = models.CharField(max_length=255, choices=TASK_NOTE)
+    count = models.IntegerField(default=0)
+    obj_id = models.IntegerField()
+    data = models.TextField()
 
 
 class TransactionByDay(models.Model):

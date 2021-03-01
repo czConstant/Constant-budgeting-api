@@ -127,13 +127,13 @@ class TransactionByCategorySerializer(serializers.ModelSerializer):
 class BudgetSerializer(serializers.ModelSerializer):
     class Meta:
         model = Budget
-        fields = ('category', 'wallet', 'amount',
+        fields = ('id', 'category', 'wallet', 'amount',
                   'from_date', 'to_date')
 
 
 class BudgetDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = BudgetDetail
-        fields = ('category_id', 'category_code', 'category_name',
+        fields = ('id', 'category_id', 'category_code', 'category_name',
                   'wallet_id', 'amount', 'current_amount', 'is_end', 'is_over',
                   'from_date', 'to_date')
