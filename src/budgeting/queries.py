@@ -317,7 +317,7 @@ from
 (
 select b.id,
        bc.id as category_id, bc.code as category_code, bc.name as category_name,
-       b.wallet_id, b.amount, coalesce(sum(t.amount), 0) as current_amount,
+       ifnull(b.wallet_id, 0) as wallet_id, b.amount, coalesce(sum(t.amount), 0) as current_amount,
        if(now() > b.to_date, 1, 0) as is_end,
        if(sum(t.amount) > b.amount, 1, 0) as is_over,
        b.from_date, b.to_date

@@ -1,11 +1,14 @@
+import logging
 import traceback
 
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from budgeting.business.notification import BudgetingNotification
 from budgeting.business.transaction import TransactionBusiness
-from budgeting.models import Wallet
+from budgeting.constants import TASK_NOTE
+from budgeting.models import Wallet, TaskNote
 from budgeting_auth.authentication import SystemPermission
 from common.business import get_now
 
@@ -34,6 +37,19 @@ class ImportPlaidTransactionView(APIView):
                 wallet.error = wallet.error_details = wallet.error_at = None
                 wallet.save()
                 success_count += 1
+
+                try:
+                    tn = TaskNote.objects.filter(user_id=wallet.user_id,
+                                                 task=TASK_NOTE.first_import_transaction_notification,
+                                                 obj_id=wallet.id).first()
+                    if not tn:
+                        BudgetingNotification.noti_transaction_imported(wallet.user_id)
+                        TaskNote.objects.create(user_id=wallet.user_id,
+                                                task=TASK_NOTE.first_import_transaction_notification,
+                                                obj_id=wallet.id,
+                                                count=1)
+                except Exception as noti_ex:
+                    logging.exception(noti_ex)
             except Exception as ex:
                 wallet.error = str(ex)
                 wallet.error_details = traceback.format_exc()

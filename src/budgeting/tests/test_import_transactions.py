@@ -6,7 +6,7 @@ from rest_framework.test import APITestCase
 
 from budgeting.factories import WalletFactory
 from common.business import get_now
-from common.test_mocks import TransactionBusinessMock
+from common.test_mocks import TransactionBusinessMock, BudgetingNotificationMock
 from common.test_utils import AuthenticationUtils
 
 
@@ -18,8 +18,10 @@ class ImportPlaidTransactionJobTests(APITestCase):
         self.url = reverse('budget-job:import-plaid-transaction-view')
         self.transaction_business_mock = TransactionBusinessMock()
         self.transaction_business_mock.import_transaction_from_plaid()
+        self.notification_mock = BudgetingNotificationMock()
 
     def test_run_1(self):
+        noti_transaction_imported_mock = self.notification_mock.noti_transaction_imported()
         last_import = get_now().today() - timedelta(days=1)
         WalletFactory.create_batch(5, user_id=1, last_import=last_import, plaid_id=1)
         response = self.client.post(self.url, format='json')
@@ -27,3 +29,4 @@ class ImportPlaidTransactionJobTests(APITestCase):
         data = response.json()
         self.assertEqual(data['success'], 5)
         self.assertEqual(data['failed'], 0)
+        self.assertEqual(noti_transaction_imported_mock.call_count, 5)

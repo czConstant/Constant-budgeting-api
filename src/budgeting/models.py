@@ -276,8 +276,8 @@ class TaskNote(TimestampedModel):
     user_id = models.IntegerField()
     task = models.CharField(max_length=255, choices=TASK_NOTE)
     count = models.IntegerField(default=0)
-    obj_id = models.IntegerField()
-    data = models.TextField()
+    obj_id = models.IntegerField(null=True)
+    data = models.TextField(null=True, blank=True)
 
 
 class TransactionByDay(models.Model):

@@ -141,9 +141,21 @@ class TransactionBusinessMock(object):
 
 
 class BudgetingNotificationMock(object):
-    def email_user_buy_order(self):
+    def noti_transaction_imported(self):
         mock = MagicMock(return_value=True)
-        BudgetingNotification.email_user_buy_order = mock
+        BudgetingNotification.noti_transaction_imported = mock
+
+        return mock
+
+    def noti_budget_end(self):
+        mock = MagicMock(return_value=True)
+        BudgetingNotification.noti_budget_end = mock
+
+        return mock
+
+    def noti_budget_over(self):
+        mock = MagicMock(return_value=True)
+        BudgetingNotification.noti_budget_over = mock
 
         return mock
 
