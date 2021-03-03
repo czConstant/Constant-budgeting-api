@@ -301,9 +301,9 @@ class BudgetQueries:
         wallet_cond = ''
         if wallet_id:
             if wallet_id == '0':
-                wallet_cond = 'and t.wallet_id is null'
+                wallet_cond = 'and b.wallet_id is null'
             else:
-                wallet_cond = 'and t.wallet_id = %(wallet_id)s'
+                wallet_cond = 'and b.wallet_id = %(wallet_id)s'
         is_over_cond = ''
         if is_over is not None:
             is_over_cond = 'and is_over = {}'.format('1' if str(is_over) == '1' else '0')
@@ -324,9 +324,10 @@ select b.id,
 from budgeting_budget b
 join budgeting_category bc on b.category_id = bc.id
 left join budgeting_transaction t on t.category_id = b.category_id
-                                         {wallet_cond}
+                                         and ifnull(b.wallet_id, 0) = ifnull(t.wallet_id, 0)
                                          and (b.from_date <= t.transaction_at and t.transaction_at < DATE_ADD(b.to_date, interval 1 day))
 where b.user_id = %(user_id)s
+{wallet_cond}
 group by b.id, bc.id
 ) as r
 where 

@@ -84,6 +84,8 @@ class BudgetTests(APITestCase):
         cat = CategoryFactory()
         BudgetFactory(user_id=self.user_id, wallet=None, category=cat, amount=Decimal(1000),
                       from_date=datetime(2021, 1, 1), to_date=datetime(2100, 1, 31))
+        BudgetFactory(user_id=self.user_id, wallet=wallet, category=cat, amount=Decimal(1000),
+                      from_date=datetime(2021, 1, 1), to_date=datetime(2100, 1, 31))
         TransactionFactory.create_batch(3, user_id=self.user_id, transaction_at=datetime(2021, 1, 1),
                                         wallet=None, category=cat)
         TransactionFactory.create_batch(3, user_id=self.user_id, transaction_at=datetime(2021, 1, 31),
@@ -93,6 +95,7 @@ class BudgetTests(APITestCase):
         response = self.client.get(self.url + '?wallet_id=0', format='json')
         data = response.json()
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(data), 1)
         self.assertEqual(Decimal(data[0]['current_amount']), Decimal(60))
         self.assertEqual(Decimal(data[0]['is_end']), False)
         self.assertEqual(Decimal(data[0]['is_over']), False)
