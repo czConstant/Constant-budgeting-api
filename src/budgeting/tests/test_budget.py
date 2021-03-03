@@ -6,7 +6,6 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from budgeting.factories import WalletFactory, CategoryFactory, BudgetFactory, TransactionFactory
-from budgeting.models import Transaction
 from common.test_utils import AuthenticationUtils
 
 

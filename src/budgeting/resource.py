@@ -128,8 +128,7 @@ class WalletViewSet(mixins.CreateModelMixin,
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
-        instance.deleted_at = get_now()
-        instance.save()
+        WalletBusiness.delete_wallet(instance)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(detail=False, methods=['get'], url_path='balance')

@@ -28,6 +28,7 @@ class AuthenticationUtils(object):
 
     def system_login(self, username: str = None):
         username = username if username else self.username
+        user_id = 999
         ConstantManagement.auth_check = MagicMock(return_value={
             'Result': {
                 'ID': 1,
@@ -38,6 +39,7 @@ class AuthenticationUtils(object):
             }
         })
         self.client.credentials(HTTP_AUTHORIZATION='Bearer ' + settings.SYSTEM_TOKEN)
+        return user_id
 
     def user_recaptcha(self):
         ReCaptchaPermission.captcha_auth = MagicMock(return_value=True)

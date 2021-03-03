@@ -75,7 +75,7 @@ class ConstantCoreBusiness(object):
 
     @staticmethod
     def get_plaid_account(plaid_id):
-        return PlaidAccounts.objects.filter(id=plaid_id).first()
+        return PlaidAccounts.objects.filter(id=plaid_id, deleted_at__isnull=True).first()
 
     @staticmethod
     def get_device_tokens(user_ids=[]):

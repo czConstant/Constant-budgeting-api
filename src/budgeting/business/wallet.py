@@ -3,6 +3,7 @@ from datetime import date, timedelta
 from rest_framework.exceptions import ValidationError
 
 from budgeting.models import Wallet, ConstUser
+from common.business import get_now
 from constant_core.business import ConstantCoreBusiness
 
 
@@ -31,3 +32,8 @@ class WalletBusiness:
             )
 
         return wallet
+
+    @staticmethod
+    def delete_wallet(instance: Wallet):
+        instance.deleted_at = get_now()
+        instance.save()

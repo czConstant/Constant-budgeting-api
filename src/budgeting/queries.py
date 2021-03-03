@@ -339,3 +339,28 @@ where
 
         qs = BudgetDetail.objects.raw(txt, {'user_id': user_id, 'wallet_id': wallet_id})
         return qs
+
+    @staticmethod
+    def get_end_budget_to_notify():
+        txt = '''select b.user_id, b.id, bc.id, bc.name, ifnull(bw.id, 0), ifnull(bw.name, 'Manual Wallet')
+from budgeting_budget b
+join budgeting_category bc on b.category_id = bc.id
+left join budgeting_wallet bw on b.wallet_id = bw.id and bw.deleted_at is null 
+where b.to_date between date_sub(now(), interval 1 day) and now()
+'''
+
+        result = []
+        with connection.cursor() as cursor:
+            cursor.execute(txt)
+            rows = cursor.fetchall()
+            for row in rows:
+                result.append({
+                    'user_id': row[0],
+                    'budget_id': row[1],
+                    'category_id': row[2],
+                    'category_name': row[3],
+                    'wallet_id': row[4],
+                    'wallet_name': row[5]
+                })
+
+        return result

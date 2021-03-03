@@ -8,7 +8,8 @@ from rest_framework.views import APIView
 from budgeting.business.notification import BudgetingNotification
 from budgeting.business.transaction import TransactionBusiness
 from budgeting.constants import TASK_NOTE
-from budgeting.models import Wallet, TaskNote
+from budgeting.models import Wallet, TaskNote, Budget
+from budgeting.queries import BudgetQueries
 from budgeting_auth.authentication import SystemPermission
 from common.business import get_now
 
@@ -50,6 +51,12 @@ class ImportPlaidTransactionView(APIView):
                                                 count=1)
                 except Exception as noti_ex:
                     logging.exception(noti_ex)
+
+                try:
+                    self.over_budget_notify(wallet)
+                except Exception as noti_ex:
+                    logging.exception(noti_ex)
+
             except Exception as ex:
                 wallet.error = str(ex)
                 wallet.error_details = traceback.format_exc()
@@ -64,5 +71,41 @@ class ImportPlaidTransactionView(APIView):
 
         return Response({
             'success': success_count,
+            'failed': failed_count,
+        })
+
+    def over_budget_notify(self, wallet):
+        qs = BudgetQueries.get_budget_details(wallet.user_id, wallet.id, is_over='1')
+        for item in qs:
+            try:
+                tn = TaskNote.objects.filter(user_id=item.user_id,
+                                             task=TASK_NOTE.over_budget_notification,
+                                             obj_id=item.wallet_id).first()
+                if not tn:
+                    BudgetingNotification.noti_transaction_imported(wallet.user_id)
+                    TaskNote.objects.create(user_id=item.user_id,
+                                            task=TASK_NOTE.over_budget_notification,
+                                            obj_id=item.id,
+                                            count=1)
+            except Exception as noti_ex:
+                logging.exception(noti_ex)
+
+
+class EndBudgetNotifyView(APIView):
+    permission_classes = (IsAuthenticated, SystemPermission)
+
+    def post(self, request, format=None):
+        items = BudgetQueries.get_end_budget_to_notify()
+        success_count = failed_count = 0
+        for item in items:
+            try:
+                BudgetingNotification.noti_budget_end(item['user_id'])
+                success_count += 1
+            except Exception as noti_ex:
+                logging.exception(noti_ex)
+                failed_count += 1
+
+        return Response({
+            'count': success_count,
             'failed': failed_count,
         })

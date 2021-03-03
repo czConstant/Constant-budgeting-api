@@ -13,4 +13,5 @@ DIRECTION = Choices(
 
 TASK_NOTE = Choices(
     ('first_import_transaction_notification', 'First import transaction notification'),
+    ('over_budget_notification', 'over_budget_notification')
 )

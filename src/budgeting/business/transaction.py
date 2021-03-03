@@ -6,6 +6,7 @@ from decimal import Decimal
 from django.core.serializers.json import DjangoJSONEncoder
 
 from budgeting.business.category import CategoryBusiness
+from budgeting.business.wallet import WalletBusiness
 from budgeting.constants import DIRECTION
 from budgeting.models import Transaction, Wallet, Category
 from common.business import get_now
@@ -20,6 +21,9 @@ class TransactionBusiness:
         to_date = to_date.strftime('%Y-%m-%d') if to_date else (get_now() + timedelta(days=1)).strftime('%Y-%m-%d')
 
         plaid_account = ConstantCoreBusiness.get_plaid_account(wallet.plaid_id)
+        if not plaid_account:
+            WalletBusiness.delete_wallet(wallet)
+            
         transactions = PlaidManagement.get_transaction(plaid_account.access_token, from_date, to_date)
 
         default_category = Category.DEFAULT_CODE
