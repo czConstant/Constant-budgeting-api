@@ -23,7 +23,8 @@ class TransactionBusiness:
         plaid_account = ConstantCoreBusiness.get_plaid_account(wallet.plaid_id)
         if not plaid_account:
             WalletBusiness.delete_wallet(wallet)
-            
+            return
+
         transactions = PlaidManagement.get_transaction(plaid_account.access_token, from_date, to_date)
 
         default_category = Category.DEFAULT_CODE

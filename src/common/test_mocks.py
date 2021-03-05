@@ -9,6 +9,7 @@ from budgeting.business.notification import BudgetingNotification
 from budgeting_pubsub.google_pubsub import PubSub
 
 from integration_3rdparty.const_core import ConstantCoreManagement
+from integration_3rdparty.plaid import PlaidManagement
 
 
 class CoreMock(object):
@@ -136,8 +137,9 @@ class BackendQueryMock(object):
 class TransactionBusinessMock(object):
     def import_transaction_from_plaid(self):
         mock = MagicMock(return_value=None)
+        original = TransactionBusiness.import_transaction_from_plaid
         TransactionBusiness.import_transaction_from_plaid = mock
-        return mock
+        return mock, original
 
 
 class BudgetingNotificationMock(object):
@@ -164,5 +166,13 @@ class PubSubMock(object):
     def send_message(self):
         mock = MagicMock(return_value=True)
         PubSub.send_message = mock
+
+        return mock
+
+
+class PlaidManagementMock(object):
+    def get_transaction(self):
+        mock = MagicMock(return_value=[])
+        PlaidManagement.get_transaction = mock
 
         return mock

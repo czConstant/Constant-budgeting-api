@@ -51,6 +51,8 @@ class CategoryBusiness:
     def lazy_load_default_category():
         if not CategoryBusiness.category_default:
             CategoryBusiness.category_default = {
-                DIRECTION.income: Category.objects.filter(code=Category.DEFAULT_CODE, direction=DIRECTION.income).first(),
-                DIRECTION.expense: Category.objects.filter(code=Category.DEFAULT_CODE, direction=DIRECTION.expense).first()
+                DIRECTION.income: Category.objects.filter(
+                    code=Category.DEFAULT_CODE, direction=DIRECTION.income).first(),
+                DIRECTION.expense: Category.objects.filter(
+                    code=Category.DEFAULT_CODE, direction=DIRECTION.expense).first()
             }
