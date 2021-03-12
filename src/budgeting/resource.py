@@ -110,8 +110,8 @@ class WalletViewSet(mixins.CreateModelMixin,
             item['type'] = 'linked_bank'
         result_list.insert(0, {
             'id': 0,
-            'name': 'Manual Wallet',
-            'type': 'manual_wallet'
+            'name': 'Manual Balance',
+            'type': 'manual_balance'
         })
         return Response(result_list)
 
