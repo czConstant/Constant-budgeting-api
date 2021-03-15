@@ -8,7 +8,7 @@ from rest_framework.test import APITestCase
 from budgeting.constants import DIRECTION
 from budgeting.factories import CategoryFactory, TransactionFactory, WalletFactory, CategoryGroupFactory, \
     TravelPlanFactory
-from budgeting.models import Transaction, Wallet, Category
+from budgeting.models import Transaction, Wallet, Category, TravelPlan
 from common.business import get_now
 from common.test_mocks import CoreMock
 from common.test_utils import AuthenticationUtils
@@ -579,10 +579,18 @@ class TravelPlanTests(APITestCase):
         self.auth_utils = AuthenticationUtils(self.client)
         self.user_id = self.auth_utils.user_login()
 
-        TravelPlanFactory.create_batch(10, user_id=1)
+        TravelPlanFactory.create_batch(10, user_id=self.user_id)
         self.url = reverse('budget:travelplan-list')
 
     def test_list(self):
         response = self.client.get(self.url, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.json()), 10)
+
+    def test_finish(self):
+        obj = TravelPlanFactory(user_id=self.user_id)
+        url = reverse('budget:travelplan-finish', args=[obj.id, ])
+        response = self.client.post(url, format='json')
+        new_obj = TravelPlan.objects.get(id=obj.id)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(new_obj.to_date.date(), get_now().date())

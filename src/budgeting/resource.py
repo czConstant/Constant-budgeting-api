@@ -194,7 +194,10 @@ class TransactionViewSet(ModelViewSet):
             self.permission_denied(request)
 
     def perform_create(self, serializer):
-        serializer.save(user_id=self.request.user.user_id)
+        now = get_now()
+        travel_plan = TravelPlan.objects.filter(user_id=self.request.user.user_id,
+                                                from_date__lte=now, to_date__gte=now).last()
+        serializer.save(user_id=self.request.user.user_id, travel_plan=travel_plan)
 
     def get_serializer(self, *args, **kwargs):
         serializer_class = self.get_serializer_class()
@@ -347,3 +350,16 @@ class TravelPlanViewSet(ModelViewSet):
 
     def get_queryset(self):
         return TravelPlan.objects.filter(user_id=self.request.user.user_id)
+
+    def check_object_permissions(self, request, obj):
+        super(TravelPlanViewSet, self).check_object_permissions(request, obj)
+        if not request.user.user_id == obj.user_id:
+            self.permission_denied(request)
+
+    @action(detail=True, methods=['post'])
+    def finish(self, request, pk):
+        obj = TravelPlan.objects.get(user_id=request.user.user_id, id=pk)
+        obj.to_date = get_now()
+        obj.save()
+
+        return Response(TravelPlanSerializer(obj).data)
