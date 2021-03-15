@@ -280,6 +280,13 @@ class TaskNote(TimestampedModel):
     data = models.TextField(null=True, blank=True)
 
 
+class TravelPlan(TimestampedModel):
+    user_id = models.IntegerField()
+    name = models.CharField(max_length=255, null=True, blank=True)
+    from_date = models.DateTimeField(null=True)
+    to_date = models.DateTimeField(null=True)
+
+
 class TransactionByDay(models.Model):
     class Meta:
         managed = False

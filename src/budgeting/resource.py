@@ -69,7 +69,11 @@ class CategoryViewSet(ModelViewSet):
     filter_backends = (DjangoFilterBackend, OrderingFilter)
     filterset_class = CategoryFilter
     serializer_class = CategorySerializer
-    queryset = Category.objects.filter(deleted_at__isnull=True).order_by('order')
+    queryset = Category.objects.none()
+
+    def get_queryset(self):
+        return Category.objects.filter(Q(user_id__isnull=True) | Q(user_id=self.request.user.user_id),
+                                       deleted_at__isnull=True).order_by('order')
 
     def check_object_permissions(self, request, obj):
         super(CategoryViewSet, self).check_object_permissions(request, obj)
