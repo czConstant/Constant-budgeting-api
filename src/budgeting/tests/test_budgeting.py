@@ -6,7 +6,8 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from budgeting.constants import DIRECTION
-from budgeting.factories import CategoryFactory, TransactionFactory, WalletFactory, CategoryGroupFactory
+from budgeting.factories import CategoryFactory, TransactionFactory, WalletFactory, CategoryGroupFactory, \
+    TravelPlanFactory
 from budgeting.models import Transaction, Wallet, Category
 from common.business import get_now
 from common.test_mocks import CoreMock
@@ -566,6 +567,20 @@ class TransactionNoPagingTests(APITestCase):
 
         TransactionFactory.create_batch(10, user_id=1)
         self.url = reverse('budget:no-paging-transaction-list')
+
+    def test_list(self):
+        response = self.client.get(self.url, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.json()), 10)
+
+
+class TravelPlanTests(APITestCase):
+    def setUp(self):
+        self.auth_utils = AuthenticationUtils(self.client)
+        self.user_id = self.auth_utils.user_login()
+
+        TravelPlanFactory.create_batch(10, user_id=1)
+        self.url = reverse('budget:travelplan-list')
 
     def test_list(self):
         response = self.client.get(self.url, format='json')

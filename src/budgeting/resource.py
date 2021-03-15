@@ -15,11 +15,12 @@ from rest_framework.viewsets import ReadOnlyModelViewSet, ModelViewSet, GenericV
 from budgeting.business.category import CategoryBusiness
 from budgeting.business.wallet import WalletBusiness
 from budgeting.constants import DIRECTION
-from budgeting.models import Category, Transaction, Wallet, CategoryGroup, Budget
+from budgeting.models import Category, Transaction, Wallet, CategoryGroup, Budget, TravelPlan
 from budgeting.queries import TransactionQueries, WalletQueries, BudgetQueries
 from budgeting.serializers import CategorySerializer, TransactionSerializer, TransactionByDaySerializer, \
     WalletSerializer, CategoryGroupSerializer, WalletBalanceSerializer, TransactionLinkedBankSerializer, \
-    WriteCategorySerializer, TransactionByCategorySerializer, BudgetSerializer, BudgetDetailSerializer
+    WriteCategorySerializer, TransactionByCategorySerializer, BudgetSerializer, BudgetDetailSerializer, \
+    TravelPlanSerializer
 from common.business import get_now
 from common.http import StandardPagination
 from constant_core.business import ConstantCoreBusiness
@@ -337,3 +338,12 @@ class BudgetViewSet(ModelViewSet):
             if str(request.data['wallet']) == '0':
                 request.data.pop('wallet')
         return super(BudgetViewSet, self).update(request, *args, **kwargs)
+
+
+class TravelPlanViewSet(ModelViewSet):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = TravelPlanSerializer
+    queryset = TravelPlan.objects.none()
+
+    def get_queryset(self):
+        return TravelPlan.objects.filter(user_id=self.request.user.user_id)
