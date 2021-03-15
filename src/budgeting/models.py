@@ -234,6 +234,13 @@ class Wallet(TimestampedModel):
     deleted_at = models.DateTimeField(null=True)
 
 
+class TravelPlan(TimestampedModel):
+    user_id = models.IntegerField()
+    name = models.CharField(max_length=255, null=True, blank=True)
+    from_date = models.DateTimeField(null=True)
+    to_date = models.DateTimeField(null=True)
+
+
 class Transaction(TimestampedModel):
     user_id = models.IntegerField()
     category = models.ForeignKey(Category,
@@ -250,6 +257,8 @@ class Transaction(TimestampedModel):
     transaction_at = models.DateTimeField(null=True, default=timezone.now)
     external_id = models.CharField(max_length=255, null=True, blank=True)
     detail = models.TextField(null=True, blank=True)
+    travel_plan = models.ForeignKey(TravelPlan, related_name='travel_plan_transactions',
+                                    on_delete=models.SET_NULL, null=True)
 
     @cached_property
     def detail_dict(self):
@@ -278,13 +287,6 @@ class TaskNote(TimestampedModel):
     count = models.IntegerField(default=0)
     obj_id = models.IntegerField(null=True)
     data = models.TextField(null=True, blank=True)
-
-
-class TravelPlan(TimestampedModel):
-    user_id = models.IntegerField()
-    name = models.CharField(max_length=255, null=True, blank=True)
-    from_date = models.DateTimeField(null=True)
-    to_date = models.DateTimeField(null=True)
 
 
 class TransactionByDay(models.Model):

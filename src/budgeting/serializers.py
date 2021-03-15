@@ -1,8 +1,9 @@
+from django.db.models import Q
 from rest_framework import serializers
 
 from budgeting.business.category import CategoryBusiness
 from budgeting.models import Category, Transaction, TransactionByDay, Wallet, CategoryGroup, WalletBalance, \
-    TransactionByCategory, Budget, BudgetDetail
+    TransactionByCategory, Budget, BudgetDetail, TravelPlan
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -35,7 +36,9 @@ class CategoryGroupSerializer(serializers.ModelSerializer):
     categories = serializers.SerializerMethodField()
 
     def get_categories(self, instance):
-        qs = instance.group_categories.filter(deleted_at__isnull=True)
+        qs = instance.group_categories.filter(
+            Q(user_id__isnull=True) | Q(user_id=self.context['request'].user.user_id),
+            deleted_at__isnull=True).order_by('order')
         if 'request' in self.context:
             direction = self.context['request'].query_params.get('direction')
             if direction:
@@ -137,3 +140,9 @@ class BudgetDetailSerializer(serializers.ModelSerializer):
         fields = ('id', 'category_id', 'category_code', 'category_name',
                   'wallet_id', 'amount', 'current_amount', 'is_end', 'is_over',
                   'from_date', 'to_date')
+
+
+class TravelPlanSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TravelPlan
+        fields = '__all__'

@@ -1,3 +1,4 @@
+from datetime import timedelta
 from decimal import Decimal
 
 import factory
@@ -47,3 +48,12 @@ class BudgetFactory(factory.django.DjangoModelFactory):
     amount = Decimal(1000)
     from_date = get_now().today()
     to_date = get_now().today()
+
+
+class TravelPlanFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = 'budgeting.TravelPlan'
+
+    user_id = factory.Sequence(lambda n: n)
+    from_date = get_now().today()
+    to_date = get_now().today() + timedelta(days=7)
